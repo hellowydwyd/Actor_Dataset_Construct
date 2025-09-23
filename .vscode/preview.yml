@@ -1,0 +1,9 @@
+autoOpen: true # 打开工作空间时自动开启预览
+apps:
+  - port: 5000 # 应用的端口
+    run: python main.py web --host 0.0.0.0 --port 5000 # 应用启动命令
+    root: ./ # 应用的启动目录 (项目根目录)
+    name: 电影演员人脸数据库系统 # 应用名称
+    description: 基于AI的电影演员人脸识别数据库构建系统 # 应用描述
+    autoOpen: true # 打开工作空间时自动运行
+    autoPreview: true # 自动打开预览
