@@ -70,7 +70,21 @@ Actor_dataset_contruct/
 
 ## 🚀 快速开始
 
-### 本地安装和运行
+### 方法1: Cloud Studio 一键部署 (推荐)
+
+**步骤**：
+1. 访问：https://cloudstudio.net/
+2. 登录 → 创建工作空间 → 从Git导入
+3. 仓库地址：`https://github.com/hellowydwyd/Actor-Dataset-Construct`
+4. 选择Python 3.9环境
+5. 在终端执行：
+```bash
+pip install -r requirements-china.txt
+python start_cloudstudio.py
+```
+6. 点击"预览"按钮访问公网应用
+
+### 方法2: 本地安装运行
 
 #### 1. 克隆项目
 ```bash
@@ -80,17 +94,17 @@ cd Actor-Dataset-Construct
 
 #### 2. 安装依赖
 ```bash
-# 中国用户推荐使用国内镜像源
+# 中国用户推荐
 pip install -r requirements-china.txt
 
 # 国际用户
 pip install -r requirements.txt
 ```
 
-#### 3. 配置API
+#### 3. 配置API密钥
 ```bash
 # 复制配置文件
-cp env.example .env
+cp config/env_example .env
 
 # 编辑.env文件，添加TMDB API密钥
 TMDB_API_KEY=your_api_key_here
@@ -101,10 +115,10 @@ TMDB_API_KEY=your_api_key_here
 #### 4. 启动应用
 ```bash
 # Web界面 (推荐)
-python main.py web
+python main.py web --host 0.0.0.0 --port 5000
 
-# 或使用快速启动脚本
-python run.py web
+# 或使用Cloud Studio启动脚本
+python start_cloudstudio.py
 ```
 
 ## 💻 使用方法
