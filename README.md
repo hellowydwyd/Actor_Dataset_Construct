@@ -70,15 +70,7 @@ Actor_dataset_contruct/
 
 ## 🚀 快速开始
 
-### 方法1: 一键部署 (推荐)
-
-**腾讯云 Cloud Studio (完全免费)**:
-1. 访问：https://cloudstudio.net/
-2. 导入GitHub仓库
-3. 选择Python环境
-4. 运行：`python run_china.py`
-
-### 方法2: 本地安装
+### 本地安装和运行
 
 #### 1. 克隆项目
 ```bash
@@ -108,14 +100,11 @@ TMDB_API_KEY=your_api_key_here
 
 #### 4. 启动应用
 ```bash
-# 中国优化版本 (推荐)
-python run_china.py
-
-# 标准版本  
-python run_web.py
-
-# 命令行版本
+# Web界面 (推荐)
 python main.py web
+
+# 或使用快速启动脚本
+python run.py web
 ```
 
 ## 💻 使用方法
@@ -123,7 +112,7 @@ python main.py web
 ### 🎭 构建演员数据集
 ```bash
 # Web界面 (推荐)
-访问 http://localhost:8080 → 数据集构建
+访问 http://localhost:5000 → 数据集构建
 
 # 命令行
 python main.py build --movie "肖申克的救赎" --year 1994
@@ -164,18 +153,15 @@ python main.py search --image "path/to/photo.jpg"
 - 🌍 **跨平台**: Windows/Linux/macOS
 - 📱 **响应式**: 支持移动端访问
 
-## 🚀 部署选项
+## 🎯 系统要求
 
-| 平台 | 类型 | 成本 | 适用场景 |
-|------|------|------|----------|
-| [腾讯云 Cloud Studio](https://cloudstudio.net/) | 云开发环境 | 🆓 免费 | 快速演示 |
-| [Railway](https://railway.app) | 云部署平台 | 🆓 有限免费 | 生产环境 |
-| [Render](https://render.com) | 云服务 | 🆓 免费层 | 小型应用 |
-| Docker | 容器化部署 | 💰 自建成本 | 企业级 |
+- Python 3.8+
+- 2GB+ RAM (用于AI模型)
+- 5GB+ 存储空间
+- 网络连接 (TMDB API访问)
 
 ## 📖 文档
 
-- 📋 [部署指南](docs/国内部署方案.md)
 - 🔧 [中文渲染方案](docs/中文文字渲染解决方案.md)
 - 📁 [目录结构说明](docs/图片目录结构迁移说明.md)
 - ⚡ [视频预览优化](docs/视频预览功能优化说明.md)
