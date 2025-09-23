@@ -1,0 +1,41 @@
+{
+    "name": "Actor Dataset Construct",
+    "image": "mcr.microsoft.com/devcontainers/python:3.9",
+    "features": {
+        "ghcr.io/devcontainers/features/node:1": {},
+        "ghcr.io/devcontainers/features/git:1": {}
+    },
+    "forwardPorts": [5000],
+    "portsAttributes": {
+        "5000": {
+            "label": "Flask App",
+            "onAutoForward": "notify"
+        }
+    },
+    "postCreateCommand": "pip install -r requirements.txt && mkdir -p data/images data/embeddings data/metadata logs temp",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "ms-python.flake8",
+                "ms-python.isort",
+                "ms-toolsai.jupyter",
+                "bradlc.vscode-tailwindcss"
+            ],
+            "settings": {
+                "python.defaultInterpreterPath": "/usr/local/bin/python",
+                "python.linting.enabled": true,
+                "python.linting.pylintEnabled": false,
+                "python.linting.flake8Enabled": true,
+                "python.formatting.provider": "black"
+            }
+        }
+    },
+    "mounts": [
+        "source=${localWorkspaceFolder}/data,target=/workspace/data,type=bind"
+    ],
+    "remoteEnv": {
+        "PYTHONPATH": "/workspace"
+    }
+}
+

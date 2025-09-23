@@ -1,0 +1,100 @@
+# 中国环境优化配置文件
+
+# TMDB API配置 - 网络优化
+tmdb:
+  api_key: "${TMDB_API_KEY}"
+  base_url: "https://api.themoviedb.org/3"
+  image_base_url: "https://image.tmdb.org/t/p/"
+  timeout: 30                    # 增加超时时间适应网络环境
+  retry_count: 3                 # 重试次数
+  retry_delay: 2                 # 重试间隔(秒)
+
+# 图片爬取配置 - 中国网络优化
+crawler:
+  max_images_per_actor: 12       # 适度减少图片数量
+  min_face_size: 112
+  image_quality_threshold: 0.7
+  download_timeout: 30           # 增加下载超时
+  concurrent_downloads: 2        # 降低并发数减少网络压力
+  request_delay: 1               # 增加请求间隔
+  single_person_only: true
+  max_faces_per_image: 1
+  
+  # 请求头优化
+  headers:
+    user_agent: "Mozilla/5.0 (compatible; ActorCrawler/1.0; +http://example.com/bot)"
+    accept_language: "zh-CN,zh;q=0.9,en;q=0.8"
+  
+  sources:
+    - name: "tmdb_images"
+      enabled: true
+      max_results: 8
+      timeout: 20
+      description: "TMDB官方图片"
+    - name: "baidu_images"
+      enabled: false             # 可根据需要启用
+      max_results: 10
+      description: "百度图片搜索"
+
+# InsightFace配置 - 内存优化
+face_recognition:
+  model_name: "buffalo_l"
+  detection_threshold: 0.6
+  embedding_dim: 512
+  face_alignment: true
+  model_cache: true              # 启用模型缓存
+  lazy_loading: true             # 懒加载减少内存使用
+  batch_size: 8                  # 批处理大小
+
+# 向量数据库配置
+vector_database:
+  type: "faiss"
+  index_type: "Flat"            # 使用简单索引
+  dimension: 512
+  similarity_threshold: 0.8
+  
+  chromadb:
+    persist_directory: "./data/embeddings/chromadb"
+    collection_name: "actor_faces"
+
+# 数据存储配置
+storage:
+  images_dir: "./data/images"
+  embeddings_dir: "./data/embeddings"
+  metadata_dir: "./data/metadata"
+  database_file: "./data/metadata/actors.db"
+
+# 去重配置
+deduplication:
+  face_similarity_threshold: 0.95
+  image_hash_threshold: 0.9
+  enable_face_clustering: true
+
+# Web界面配置
+web:
+  host: "0.0.0.0"
+  port: 8080                     # 常用端口
+  debug: false
+
+# 性能优化配置 - 中国环境
+performance:
+  enable_cache: true             # 启用缓存
+  cache_timeout: 3600           # 缓存1小时
+  max_memory_usage: 1.5         # 限制内存使用 (GB)
+  max_upload_size: 30           # 限制上传文件大小 (MB)
+  max_video_duration: 180       # 限制视频时长 (秒)
+  max_concurrent_users: 5       # 限制并发用户数
+  request_timeout: 300          # 请求超时时间
+
+# 日志配置 - 中文环境
+logging:
+  level: "INFO"
+  format: "%(asctime)s | %(levelname)s | %(name)s:%(funcName)s:%(lineno)d - %(message)s"
+  encoding: "utf-8"
+  timezone: "Asia/Shanghai"
+
+# 国际化配置
+i18n:
+  default_language: "zh-CN"
+  timezone: "Asia/Shanghai"
+  date_format: "%Y-%m-%d %H:%M:%S"

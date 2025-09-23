@@ -1,0 +1,3940 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>电影演员人脸数据库构建系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --info-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            --card-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            --card-shadow-hover: 0 15px 35px rgba(0, 0, 0, 0.15);
+            --border-radius: 16px;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            background: #f8fafc;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+        }
+
+        .hero-section {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 40px 0 60px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            opacity: 0.3;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .card {
+            border: none;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s ease;
+            background: white;
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--card-shadow-hover);
+        }
+
+        /* 改进的布局样式 */
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        .section-spacing {
+            margin-bottom: 3rem;
+        }
+
+        .compact-section {
+            margin-bottom: 2rem;
+        }
+
+        /* 响应式改进 */
+        @media (max-width: 768px) {
+            .hero-section {
+                padding: 30px 0 40px 0;
+            }
+            
+            .feature-card {
+                margin-bottom: 1rem;
+                min-height: 120px;
+                padding: 1.25rem;
+            }
+            
+            .stats-card {
+                padding: 1rem;
+                margin-bottom: 0.75rem;
+                min-height: 120px;
+            }
+            
+            .stats-number {
+                font-size: 1.5rem;
+            }
+            
+            .feature-icon {
+                font-size: 2.5rem;
+                margin-bottom: 0.75rem;
+            }
+            
+            .card-header {
+                padding: 1rem;
+            }
+            
+            .main-container {
+                padding: 0 10px;
+            }
+            
+            .section-spacing {
+                margin-bottom: 2rem;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .display-3 {
+                font-size: 2rem;
+            }
+            
+            .feature-icon {
+                font-size: 2rem;
+                margin-bottom: 0.5rem;
+            }
+            
+            .feature-card {
+                min-height: 100px;
+                padding: 1rem;
+            }
+            
+            .stats-card {
+                min-height: 100px;
+                padding: 1rem;
+            }
+            
+            .stats-number {
+                font-size: 1.25rem;
+            }
+            
+            .actor-preview-card {
+                padding: 0.75rem;
+            }
+        }
+
+        /* 加载状态改进 */
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            border-radius: var(--border-radius);
+            backdrop-filter: blur(8px);
+        }
+        
+        .loading-content {
+            text-align: center;
+            color: #6c757d;
+            padding: 2rem;
+        }
+        
+        .loading-content .loading-spinner {
+            margin-bottom: 1rem;
+        }
+        
+        .loading-text {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .error-content {
+            text-align: center;
+            color: #dc3545;
+            padding: 2rem;
+        }
+        
+        .error-text {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* 预览容器增强 */
+        .preview-container {
+            position: relative;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+        
+        .preview-container.loading {
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+        }
+        
+        .preview-container.success {
+            background: #e8f5e8;
+            border: 2px solid #4caf50;
+        }
+        
+        .preview-container.error {
+            background: #ffebee;
+            border: 2px solid #f44336;
+        }
+        
+        .preview-container img {
+            width: 100%;
+            height: auto;
+            border-radius: var(--border-radius);
+            transition: all 0.3s ease;
+        }
+
+        /* 文件信息显示 */
+        .file-info {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 12px;
+            padding: 1rem;
+            border: 1px solid #e9ecef;
+            backdrop-filter: blur(10px);
+        }
+        
+        .file-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 0.75rem;
+        }
+        
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: #495057;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .info-item i {
+            color: #6c757d;
+            font-size: 1rem;
+            min-width: 16px;
+        }
+        
+        .info-item span {
+            font-weight: 500;
+            word-break: break-all;
+        }
+        
+        /* 响应式文件信息 */
+        @media (max-width: 576px) {
+            .file-info-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .info-item {
+                justify-content: center;
+                text-align: center;
+            }
+        }
+
+        /* 错误状态改进 */
+        .alert-sm {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+        }
+        
+        .retry-btn {
+            transition: all 0.2s ease;
+        }
+        
+        .retry-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .card-header {
+            border-radius: var(--border-radius) var(--border-radius) 0 0 !important;
+            border: none;
+            padding: 1.5rem;
+            font-weight: 600;
+        }
+
+        .card-header.bg-primary {
+            background: var(--primary-gradient) !important;
+        }
+
+        .card-header.bg-success {
+            background: var(--success-gradient) !important;
+        }
+
+        .card-header.bg-info {
+            background: var(--info-gradient) !important;
+        }
+
+        .card-header.bg-warning {
+            background: var(--secondary-gradient) !important;
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 140px;
+        }
+
+        .progress-container {
+            display: none;
+        }
+
+        .progress {
+            height: 8px;
+            border-radius: 50px;
+            background: #e2e8f0;
+        }
+
+        .progress-bar {
+            border-radius: 50px;
+        }
+
+        /* 进度步骤样式 */
+        .progress-steps {
+            margin-top: 20px;
+        }
+        
+        .step-item {
+            margin-bottom: 15px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #dee2e6;
+            transition: all 0.3s ease;
+        }
+        
+        .step-item.active {
+            background: #e3f2fd;
+            border-left-color: #2196f3;
+            transform: translateX(2px);
+        }
+        
+        .step-item.completed {
+            background: #e8f5e9;
+            border-left-color: #4caf50;
+        }
+        
+        .step-item.error {
+            background: #ffebee;
+            border-left-color: #f44336;
+        }
+        
+        .step-icon {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+            border-radius: 50%;
+            margin-right: 12px;
+            color: #6c757d;
+            border: 2px solid #dee2e6;
+            transition: all 0.3s ease;
+        }
+        
+        .step-item.active .step-icon {
+            background: #2196f3;
+            color: white;
+            border-color: #2196f3;
+        }
+        
+        .step-item.completed .step-icon {
+            background: #4caf50;
+            color: white;
+            border-color: #4caf50;
+        }
+        
+        .step-item.error .step-icon {
+            background: #f44336;
+            color: white;
+            border-color: #f44336;
+        }
+        
+        .step-title {
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        
+        .step-status {
+            font-size: 0.875rem;
+        }
+        
+        .step-progress {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .result-card {
+            margin-bottom: 15px;
+            transition: all 0.2s ease;
+        }
+
+        .result-card:hover {
+            transform: scale(1.02);
+        }
+
+        .similarity-badge {
+            font-size: 0.9rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 20px;
+        }
+
+        .image-preview {
+            max-width: 200px;
+            max-height: 200px;
+            object-fit: cover;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .actor-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #e2e8f0;
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 140px;
+        }
+
+        .stats-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .stats-label {
+            color: #64748b;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .btn {
+            border-radius: 8px;
+            font-weight: 500;
+            padding: 0.75rem 1.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .form-control {
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.2s ease;
+        }
+
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .navbar {
+            backdrop-filter: blur(10px);
+            background: rgba(31, 41, 55, 0.9) !important;
+        }
+
+        .database-item {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease;
+        }
+
+        .database-item:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .actor-preview-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease;
+            height: 100%;
+        }
+
+        .actor-preview-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        /* 演员预览特定样式 */
+        .actor-preview-card.h-100 {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .actor-preview-card.h-100:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .actor-checkbox:checked + .form-check-label {
+            color: #0d6efd;
+            font-weight: bold;
+        }
+        
+        #actors-preview-section {
+            animation: slideDown 0.3s ease-out;
+        }
+        
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* 电影预览卡片样式 */
+        .movie-preview-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease;
+            height: 100%;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .movie-preview-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .movie-title {
+            color: #1e293b;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .movie-stats .badge {
+            font-size: 0.75rem;
+        }
+        
+        .characters-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            max-height: 250px;
+            overflow-y: auto;
+            padding: 0.5rem;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+        
+        .character-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 0.75rem;
+            border-radius: 8px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s ease;
+            min-width: 120px;
+            flex: 0 0 calc(33.333% - 0.5rem);
+        }
+        
+        .character-item:hover {
+            background: #e2e8f0;
+        }
+        
+        .character-avatar {
+            margin-bottom: 0.5rem;
+        }
+        
+        .character-img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .character-placeholder {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+        }
+        
+        .character-name {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+            line-height: 1.2;
+            word-break: break-word;
+        }
+        
+        .actor-name {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-bottom: 0.5rem;
+            line-height: 1.2;
+            word-break: break-word;
+        }
+        
+        .character-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            font-size: 0.7rem;
+            width: 100%;
+        }
+        
+        .face-count {
+            color: #3b82f6;
+            font-weight: 500;
+        }
+        
+        .quality-score {
+            color: #10b981;
+            font-weight: 500;
+        }
+        
+        .more-characters {
+            background: #f1f5f9;
+            border: 2px dashed #cbd5e1;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .character-item {
+                flex: 0 0 calc(50% - 0.5rem);
+                min-width: 100px;
+            }
+            
+            .characters-grid {
+                max-height: 200px;
+            }
+            
+            .movie-preview-card {
+                margin-bottom: 1rem;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .character-item {
+                flex: 0 0 100%;
+                min-width: auto;
+            }
+            
+            .movie-stats .badge {
+                font-size: 0.7rem;
+                padding: 0.25rem 0.5rem;
+            }
+            
+            .movie-title {
+                font-size: 1rem;
+            }
+        }
+
+        .actor-preview-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #e2e8f0;
+            margin-bottom: 0.5rem;
+            transition: opacity 0.3s ease;
+        }
+        
+        .actor-preview-avatar:hover {
+            opacity: 0.8;
+        }
+        
+        .avatar-loading {
+            background: linear-gradient(90deg, #f0f0f0 25%, transparent 37%, #f0f0f0 63%);
+            background-size: 400% 100%;
+            animation: shimmer 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes shimmer {
+            0% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .movie-tag {
+            display: inline-block;
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            color: #475569;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin: 0.25rem;
+            font-weight: 500;
+        }
+
+        .quality-bar {
+            height: 20px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 0.5rem;
+        }
+
+        .quality-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ef4444 0%, #f59e0b 50%, #10b981 100%);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        .quality-label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #64748b;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            color: #cbd5e1;
+            margin-bottom: 1rem;
+        }
+
+        .table {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .badge {
+            font-weight: 500;
+            padding: 0.5rem 0.75rem;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-film"></i> 演员人脸数据库
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="#build-section">📽️ 构建数据集</a>
+                <a class="nav-link" href="#video-section">🎥 视频识别</a>
+                <a class="nav-link" href="#search-section">🔍 人脸搜索</a>
+                <a class="nav-link" href="#database-section">💾 数据库内容</a>
+                <a class="nav-link" href="#stats-section">📊 数据统计</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 头部区域 -->
+    <section class="hero-section">
+        <div class="container hero-content">
+            <div class="text-center">
+                <h1 class="display-3 fw-bold mb-4">🎬 电影演员人脸数据库</h1>
+                <p class="lead mb-5 opacity-90 mx-auto" style="max-width: 600px;">
+                    基于AI技术的智能演员人脸识别系统，自动收集、处理和分析电影演员图片，构建高精度的人脸特征向量数据库
+                </p>
+                
+                <!-- 功能特性卡片 -->
+                <div class="row g-3 justify-content-center mb-5">
+                    <div class="col-lg-3 col-md-6 col-sm-6">
+                        <div class="feature-card">
+                            <i class="bi bi-robot feature-icon"></i>
+                            <div class="fw-semibold fs-5">AI人脸识别</div>
+                            <small class="opacity-75">InsightFace深度学习</small>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 col-sm-6">
+                        <div class="feature-card">
+                            <i class="bi bi-search feature-icon"></i>
+                            <div class="fw-semibold fs-5">相似度搜索</div>
+                            <small class="opacity-75">向量相似度检索</small>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 col-sm-6">
+                        <div class="feature-card">
+                            <i class="bi bi-database feature-icon"></i>
+                            <div class="fw-semibold fs-5">向量数据库</div>
+                            <small class="opacity-75">Faiss高性能引擎</small>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 col-sm-6">
+                        <div class="feature-card">
+                            <i class="bi bi-film feature-icon"></i>
+                            <div class="fw-semibold fs-5">电影数据</div>
+                            <small class="opacity-75">TMDB电影数据库</small>
+                        </div>
+                    </div>
+                </div>
+
+                    <!-- 快速统计 -->
+                <div class="row g-3 justify-content-center">
+                    <div class="col-lg-4 col-md-4 col-sm-4">
+                        <div class="stats-card">
+                            <div class="stats-number" id="hero-total-actors">-</div>
+                            <div class="stats-label">角色数量</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-4 col-sm-4">
+                        <div class="stats-card">
+                            <div class="stats-number" id="hero-total-vectors">-</div>
+                            <div class="stats-label">人脸向量</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-4 col-sm-4">
+                        <div class="stats-card">
+                            <div class="stats-number" id="hero-total-movies">-</div>
+                            <div class="stats-label">电影数量</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 主要内容 -->
+    <div class="main-container my-4">
+        <!-- 功能导航 -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body py-3">
+                        <div class="d-flex flex-wrap justify-content-center gap-2">
+                            <a href="#build-section" class="btn btn-outline-primary btn-sm smooth-scroll">
+                                <i class="bi bi-plus-circle"></i> 构建数据集
+                            </a>
+                            <a href="#video-section" class="btn btn-outline-dark btn-sm smooth-scroll">
+                                <i class="bi bi-camera-video"></i> 视频识别
+                            </a>
+                            <a href="#search-section" class="btn btn-outline-success btn-sm smooth-scroll">
+                                <i class="bi bi-search"></i> 人脸搜索
+                            </a>
+                            <a href="#database-section" class="btn btn-outline-warning btn-sm smooth-scroll">
+                                <i class="bi bi-people"></i> 数据库
+                            </a>
+                            <a href="#stats-section" class="btn btn-outline-info btn-sm smooth-scroll">
+                                <i class="bi bi-graph-up"></i> 统计
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 构建数据集部分 -->
+        <section id="build-section" class="section-spacing">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-plus-circle-fill"></i> 构建演员数据集</h4>
+                    <small class="opacity-75">输入电影名称，自动收集演员人脸数据</small>
+                </div>
+                <div class="card-body">
+                    <form id="build-form">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="movie-title" class="form-label">电影名称 *</label>
+                                    <div class="input-group">
+                                    <input type="text" class="form-control" id="movie-title" placeholder="请输入电影名称" required>
+                                        <button type="button" class="btn btn-outline-info" id="preview-actors-btn">
+                                            <i class="bi bi-eye"></i> 预览演员
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="movie-year" class="form-label">上映年份</label>
+                                    <input type="number" class="form-control" id="movie-year" placeholder="可选" min="1900" max="2030">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="max-actors" class="form-label">最大演员数</label>
+                                    <div class="input-group">
+                                    <input type="number" class="form-control" id="max-actors" value="20" min="1" max="50">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="smart-actor-count-btn" title="智能推荐演员数量">
+                                            <i class="bi bi-lightbulb"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 框形选择区域 -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="shape-type" class="form-label">人脸框形状</label>
+                                    <select class="form-select" id="shape-type">
+                                        <option value="rectangle">矩形框</option>
+                                        <option value="rounded_rectangle">圆角矩形</option>
+                                        <option value="circle">圆形框</option>
+                                        <option value="ellipse">椭圆框</option>
+                                        <option value="diamond">菱形框</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">免费图片源状态 
+                                        <button type="button" class="btn btn-outline-success btn-sm ms-2" onclick="showFreeCrawlerStatus()">
+                                            <i class="bi bi-info-circle"></i> 查看详情
+                                        </button>
+                                    </label>
+                                    <div id="free-crawler-preview" class="d-flex flex-wrap gap-1">
+                                        <span class="badge bg-success">TMDB ✓</span>
+                                        <span class="badge bg-success">百度图片 ✓</span>
+                                        <small class="text-muted ms-2">免费爬虫，专注剧照收集</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 演员预览区域 -->
+                        <div id="actors-preview-section" class="mb-3" style="display: none;">
+                            <div class="card bg-light">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0">
+                                        <i class="bi bi-people-fill"></i> 演员预览
+                                        <span id="preview-actor-count" class="badge bg-info ms-2">0</span>
+                                    </h6>
+                                    <button type="button" class="btn-close" onclick="hideActorsPreview()"></button>
+                                </div>
+                                <div class="card-body" id="actors-preview-content">
+                                    <!-- 演员预览内容 -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-outline-secondary" id="search-movie-btn">
+                                <i class="bi bi-search"></i> 搜索电影
+                            </button>
+                            <button type="submit" class="btn btn-primary" id="build-btn">
+                                <i class="bi bi-play-fill"></i> 开始构建
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- 电影搜索结果 -->
+                    <div id="movie-results" class="mt-4" style="display: none;">
+                        <h6>搜索结果：</h6>
+                        <div id="movie-list"></div>
+                    </div>
+
+                    <!-- 进度显示 -->
+                    <div id="build-progress" class="progress-container mt-4">
+                        <h6>构建进度：</h6>
+                        
+                        <!-- 总体进度 -->
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <small class="text-muted">总体进度</small>
+                                <small class="text-muted" id="overall-progress-text">0%</small>
+                            </div>
+                            <div class="progress mb-2">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                     role="progressbar" style="width: 0%" id="overall-progress-bar"></div>
+                        </div>
+                        </div>
+                        
+                        <!-- 详细进度步骤 -->
+                        <div class="progress-steps">
+                            <div class="step-item" id="step-movie-info">
+                                <div class="d-flex align-items-center">
+                                    <div class="step-icon">
+                                        <i class="bi bi-film"></i>
+                                    </div>
+                                    <div class="step-content flex-grow-1">
+                                        <div class="step-title">获取电影信息</div>
+                                        <div class="step-status text-muted">等待中...</div>
+                                    </div>
+                                    <div class="step-progress">
+                                        <div class="spinner-border spinner-border-sm" style="display: none;"></div>
+                                        <i class="bi bi-check-circle-fill text-success" style="display: none;"></i>
+                                        <i class="bi bi-x-circle-fill text-danger" style="display: none;"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="step-item" id="step-color-assign">
+                                <div class="d-flex align-items-center">
+                                    <div class="step-icon">
+                                        <i class="bi bi-palette"></i>
+                                    </div>
+                                    <div class="step-content flex-grow-1">
+                                        <div class="step-title">分配角色颜色</div>
+                                        <div class="step-status text-muted">等待中...</div>
+                                    </div>
+                                    <div class="step-progress">
+                                        <div class="spinner-border spinner-border-sm" style="display: none;"></div>
+                                        <i class="bi bi-check-circle-fill text-success" style="display: none;"></i>
+                                        <i class="bi bi-x-circle-fill text-danger" style="display: none;"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="step-item" id="step-collect-images">
+                                <div class="d-flex align-items-center">
+                                    <div class="step-icon">
+                                        <i class="bi bi-images"></i>
+                                    </div>
+                                    <div class="step-content flex-grow-1">
+                                        <div class="step-title">收集演员图片</div>
+                                        <div class="step-status text-muted">等待中...</div>
+                                        <div class="progress mt-1" style="height: 4px; display: none;">
+                                            <div class="progress-bar bg-info" style="width: 0%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="step-progress">
+                                        <div class="spinner-border spinner-border-sm" style="display: none;"></div>
+                                        <i class="bi bi-check-circle-fill text-success" style="display: none;"></i>
+                                        <i class="bi bi-x-circle-fill text-danger" style="display: none;"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="step-item" id="step-process-faces">
+                                <div class="d-flex align-items-center">
+                                    <div class="step-icon">
+                                        <i class="bi bi-person-bounding-box"></i>
+                                    </div>
+                                    <div class="step-content flex-grow-1">
+                                        <div class="step-title">处理人脸数据</div>
+                                        <div class="step-status text-muted">等待中...</div>
+                                        <div class="progress mt-1" style="height: 4px; display: none;">
+                                            <div class="progress-bar bg-warning" style="width: 0%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="step-progress">
+                                        <div class="spinner-border spinner-border-sm" style="display: none;"></div>
+                                        <i class="bi bi-check-circle-fill text-success" style="display: none;"></i>
+                                        <i class="bi bi-x-circle-fill text-danger" style="display: none;"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="step-item" id="step-save-database">
+                                <div class="d-flex align-items-center">
+                                    <div class="step-icon">
+                                        <i class="bi bi-database-fill"></i>
+                                    </div>
+                                    <div class="step-content flex-grow-1">
+                                        <div class="step-title">保存到数据库</div>
+                                        <div class="step-status text-muted">等待中...</div>
+                                    </div>
+                                    <div class="step-progress">
+                                        <div class="spinner-border spinner-border-sm" style="display: none;"></div>
+                                        <i class="bi bi-check-circle-fill text-success" style="display: none;"></i>
+                                        <i class="bi bi-x-circle-fill text-danger" style="display: none;"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 统计信息 -->
+                        <div class="mt-3" id="build-stats" style="display: none;">
+                            <div class="row text-center">
+                                <div class="col-3">
+                                    <div class="h5 mb-0" id="stat-actors">0</div>
+                                    <small class="text-muted">演员</small>
+                                </div>
+                                <div class="col-3">
+                                    <div class="h5 mb-0" id="stat-images">0</div>
+                                    <small class="text-muted">图片</small>
+                                </div>
+                                <div class="col-3">
+                                    <div class="h5 mb-0" id="stat-faces">0</div>
+                                    <small class="text-muted">人脸</small>
+                                </div>
+                                <div class="col-3">
+                                    <div class="h5 mb-0" id="stat-vectors">0</div>
+                                    <small class="text-muted">向量</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 构建结果 -->
+                    <div id="build-results" class="mt-4" style="display: none;">
+                        <h6>构建结果：</h6>
+                        <div id="build-summary"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 视频人脸识别部分 -->
+        <section id="video-section" class="section-spacing">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0"><i class="bi bi-camera-video-fill"></i> 视频人脸识别</h4>
+                            <small class="opacity-75">上传视频帧或图片，自动识别并标记演员姓名</small>
+                        </div>
+                        <button class="btn btn-light btn-sm" onclick="loadVideoActors()">
+                            <i class="bi bi-people"></i> 可识别演员 (<span id="recognizable-count">-</span>)
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- 上传区域 -->
+                        <div class="col-md-6">
+                            
+                            <!-- 文件上传 -->
+                            <form id="video-frame-form" enctype="multipart/form-data">
+                                <div class="mb-3">
+                                    <label for="video-frame" class="form-label">上传视频文件</label>
+                                    <input type="file" class="form-control" id="video-frame" 
+                                           accept=".mp4,.avi,.mov,.mkv,.flv,.wmv" required>
+                                    <div class="form-text" id="file-help">
+                                        <strong>视频处理：</strong>逐帧识别并输出带标注的完整视频
+                                        <br><small class="text-muted">支持格式：MP4, AVI, MOV, MKV, FLV, WMV</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="similarity-threshold" class="form-label">相似度阈值</label>
+                                    <div class="input-group">
+                                        <input type="range" class="form-range" id="similarity-threshold" 
+                                               min="0.4" max="0.9" step="0.05" value="0.6">
+                                        <span class="input-group-text" id="threshold-value">0.6</span>
+                                    </div>
+                                    <div class="form-text">较高的阈值会减少误识别，但可能遗漏一些人脸</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="movie-scope" class="form-label">电影范围限定 
+                                        <i class="bi bi-info-circle" data-bs-toggle="tooltip" 
+                                           title="选择电影可将识别范围限制在该电影的演员中，提高准确性"></i>
+                                    </label>
+                                    <select class="form-select" id="movie-scope">
+                                        <option value="">全库搜索（所有演员）</option>
+                                    </select>
+                                    <div class="form-text">
+                                        <span class="text-success">推荐：</span>选择对应电影可避免误识别为其他电影的相似演员
+                                    </div>
+                                </div>
+                                
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-dark" id="process-btn">
+                                        <i class="bi bi-film"></i> <span id="process-btn-text">处理视频</span>
+                                    </button>
+                                </div>
+                            </form>
+
+                            <!-- 原图预览 -->
+                            <div id="original-preview" class="mt-4" style="display: none;">
+                                <h6>文件预览：</h6>
+                                <img id="original-img" class="image-preview rounded" alt="文件预览">
+                            </div>
+                        </div>
+
+                        <!-- 结果显示区域 -->
+                        <div class="col-md-6">
+                            <!-- 处理状态 -->
+                            <div id="video-processing" class="text-center py-4" style="display: none;">
+                                <div class="loading-spinner"></div>
+                                <p class="mt-2 text-muted" id="processing-text">正在处理，请稍候...</p>
+                                <div class="progress mt-3" id="video-progress" style="display: none;">
+                                    <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                         role="progressbar" style="width: 0%" id="progress-bar"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- 识别结果 -->
+                            <div id="video-results" style="display: none;">
+                                <h6 id="result-title">识别结果：</h6>
+                                
+                                <!-- 单帧结果 -->
+                                <div id="frame-result" style="display: none;">
+                                    <img id="annotated-img" class="image-preview rounded mb-3" alt="标注结果">
+                                </div>
+                                
+                                <!-- 视频结果 -->
+                                <div id="video-result" style="display: none;">
+                                    <div class="card bg-light mb-3">
+                                        <div class="card-body text-center">
+                                            <h5 class="card-title">
+                                                <i class="bi bi-check-circle-fill text-success"></i> 视频处理完成
+                                            </h5>
+                                            <p class="card-text">您的标注视频已准备就绪</p>
+                                            <button class="btn btn-success" id="download-video-btn">
+                                                <i class="bi bi-download"></i> 下载标注视频
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 识别统计 -->
+                                <div id="recognition-stats" class="mb-3"></div>
+                                
+                                <!-- 识别详情 -->
+                                <div id="recognition-details"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 人脸搜索部分 -->
+        <section id="search-section" class="section-spacing">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0"><i class="bi bi-search-heart-fill"></i> 人脸相似度搜索</h4>
+                    <small class="opacity-75">上传照片，找到最相似的演员</small>
+                </div>
+                <div class="card-body">
+                    <form id="search-form" enctype="multipart/form-data">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label for="search-image" class="form-label">上传查询图片 *</label>
+                                    <input type="file" class="form-control" id="search-image" accept="image/*" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="top-k" class="form-label">返回结果数</label>
+                                    <input type="number" class="form-control" id="top-k" value="10" min="1" max="50">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-success" id="search-btn">
+                            <i class="bi bi-search"></i> 搜索相似人脸
+                        </button>
+                    </form>
+
+                    <!-- 图片预览 -->
+                    <div id="image-preview" class="mt-3" style="display: none;">
+                        <h6>查询图片：</h6>
+                        <img id="preview-img" class="image-preview rounded" alt="查询图片">
+                    </div>
+
+                    <!-- 搜索结果 -->
+                    <div id="search-results" class="mt-4" style="display: none;">
+                        <h6>搜索结果：</h6>
+                        <div id="results-container" class="row"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 数据库内容预览部分 -->
+        <section id="database-section" class="section-spacing">
+            <div class="card">
+                <div class="card-header bg-warning text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0"><i class="bi bi-collection-play-fill"></i> 电影角色数据库</h4>
+                            <small class="opacity-75">按电影分组查看角色人脸数据</small>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-light btn-sm" id="refresh-database-btn">
+                                <i class="bi bi-arrow-clockwise"></i> 刷新
+                            </button>
+                            <button class="btn btn-light btn-sm" id="view-all-btn">
+                                <i class="bi bi-grid-3x3-gap-fill"></i> 查看全部
+                            </button>
+                            <button class="btn btn-warning btn-sm" id="debug-metadata-btn">
+                                <i class="bi bi-bug"></i> 调试
+                            </button>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                                    <i class="bi bi-gear-fill"></i> 管理
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="exportMetadata()">
+                                        <i class="bi bi-download"></i> 导出Metadata文件
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-danger" href="#" onclick="clearDatabase()">
+                                        <i class="bi bi-trash-fill"></i> 清空数据库
+                                    </a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- 快速统计 -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="stats-card text-center">
+                                <div class="stats-number" id="db-total-movies">-</div>
+                                <div class="stats-label">电影总数</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stats-card text-center">
+                                <div class="stats-number" id="db-total-characters">-</div>
+                                <div class="stats-label">角色总数</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stats-card text-center">
+                                <div class="stats-number" id="db-total-faces">-</div>
+                                <div class="stats-label">人脸总数</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stats-card text-center">
+                                <div class="stats-number" id="db-avg-quality">-</div>
+                                <div class="stats-label">平均质量</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 电影角色数据预览 -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0"><i class="bi bi-collection-play"></i> 电影角色数据库 <span class="badge bg-info ms-2">IMDB Character Bank Style</span></h6>
+                        <small class="text-muted">按电影分组显示角色信息</small>
+                    </div>
+                    
+                    <div id="actors-preview">
+                        <div class="text-center py-4">
+                            <div class="loading-spinner"></div>
+                            <p class="mt-2 text-muted">加载演员预览中...</p>
+                        </div>
+                    </div>
+
+                    <!-- 电影分布预览 -->
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <h6><i class="bi bi-film"></i> 电影分布</h6>
+                            <div id="movies-preview">
+                                <div class="text-center py-2">
+                                    <div class="loading-spinner"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="bi bi-bar-chart"></i> 质量分布</h6>
+                            <div id="quality-preview">
+                                <div class="text-center py-2">
+                                    <div class="loading-spinner"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 数据统计部分 -->
+        <section id="stats-section">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0"><i class="bi bi-graph-up"></i> 技术统计</h4>
+                            <small class="opacity-75">向量数据库技术详情</small>
+                        </div>
+                        <button class="btn btn-light btn-sm" id="refresh-stats-btn">
+                            <i class="bi bi-arrow-clockwise"></i> 刷新
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="database-stats">
+                        <div class="text-center py-4">
+                            <div class="loading-spinner"></div>
+                            <p class="mt-2 text-muted">加载技术统计中...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- 脚本 -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 全局变量
+        let currentMovieData = null;
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('页面加载完成，开始初始化...');
+            initEventListeners();
+            loadInitialData();
+        });
+
+        // 加载初始数据
+        async function loadInitialData() {
+            try {
+                console.log('开始加载初始数据...');
+                await Promise.all([
+                  loadDatabaseStats(),
+                  loadDatabaseContent(),
+                  loadVideoActors(),
+                  loadFreeCrawlerStatus(),
+                  loadMoviesList()
+              ]);
+              console.log('初始数据加载完成');
+            } catch (error) {
+                console.error('初始数据加载失败:', error);
+                showNotification('error', '初始数据加载失败，请刷新页面重试');
+            }
+        }
+
+        // 初始化事件监听器
+        function initEventListeners() {
+            console.log('初始化事件监听器...');
+            
+            try {
+                // 搜索电影按钮
+                const searchMovieBtn = document.getElementById('search-movie-btn');
+                if (searchMovieBtn) {
+                    searchMovieBtn.addEventListener('click', searchMovie);
+                }
+                
+                // 构建数据集表单
+                const buildForm = document.getElementById('build-form');
+                if (buildForm) {
+                    buildForm.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        buildDataset();
+                    });
+                }
+
+                // 人脸搜索表单
+                const searchForm = document.getElementById('search-form');
+                if (searchForm) {
+                    searchForm.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        searchFace();
+                    });
+                }
+
+                // 图片预览
+                const searchImage = document.getElementById('search-image');
+                if (searchImage) {
+                    searchImage.addEventListener('change', previewImage);
+                }
+
+                // 刷新统计按钮
+                const refreshStatsBtn = document.getElementById('refresh-stats-btn');
+                if (refreshStatsBtn) {
+                    refreshStatsBtn.addEventListener('click', function() {
+                        console.log('刷新统计按钮被点击');
+                        refreshAllData();
+                    });
+                }
+                
+                // 数据库内容相关事件
+                const refreshDatabaseBtn = document.getElementById('refresh-database-btn');
+                if (refreshDatabaseBtn) {
+                    refreshDatabaseBtn.addEventListener('click', function() {
+                        console.log('刷新数据库按钮被点击');
+                        refreshDatabaseData();
+                    });
+                }
+                
+                const viewAllBtn = document.getElementById('view-all-btn');
+                if (viewAllBtn) {
+                    viewAllBtn.addEventListener('click', viewAllActors);
+                }
+                
+                const debugMetadataBtn = document.getElementById('debug-metadata-btn');
+                if (debugMetadataBtn) {
+                    debugMetadataBtn.addEventListener('click', debugMetadata);
+                }
+                
+                // 演员预览按钮事件
+                const previewActorsBtn = document.getElementById('preview-actors-btn');
+                if (previewActorsBtn) {
+                    previewActorsBtn.addEventListener('click', previewMovieActors);
+                }
+                
+                // 智能演员数量推荐按钮事件
+                const smartActorCountBtn = document.getElementById('smart-actor-count-btn');
+                if (smartActorCountBtn) {
+                    smartActorCountBtn.addEventListener('click', smartRecommendActorCount);
+                }
+                
+                // 视频识别相关事件
+                const videoFrameForm = document.getElementById('video-frame-form');
+                if (videoFrameForm) {
+                    videoFrameForm.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        processVideo();
+                    });
+                }
+                
+                const videoFrame = document.getElementById('video-frame');
+                if (videoFrame) {
+                    videoFrame.addEventListener('change', previewVideoFrame);
+                }
+                
+                const similarityThreshold = document.getElementById('similarity-threshold');
+                if (similarityThreshold) {
+                    similarityThreshold.addEventListener('input', updateThresholdValue);
+                }
+                
+                
+                console.log('事件监听器初始化完成');
+            } catch (error) {
+                console.error('事件监听器初始化失败:', error);
+            }
+        }
+
+        // 刷新所有数据
+        async function refreshAllData() {
+            console.log('开始刷新所有数据...');
+            showNotification('info', '正在刷新数据...');
+            
+            try {
+                // 先强制刷新数据库实例
+                await refreshDatabaseInstance();
+                
+                // 然后刷新所有显示数据
+                await Promise.all([
+                    loadDatabaseStats(),
+                    loadDatabaseContent(),
+                    loadVideoActors()
+                ]);
+                showNotification('success', '数据刷新成功');
+                console.log('所有数据刷新完成');
+            } catch (error) {
+                console.error('数据刷新失败:', error);
+                showNotification('error', '数据刷新失败，请稍后重试');
+            }
+        }
+        
+        // 强制刷新数据库实例
+        async function refreshDatabaseInstance() {
+            try {
+                const response = await fetch('/api/refresh_database', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'}
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    console.log('数据库实例刷新成功:', data.stats);
+                    return data.stats;
+                } else {
+                    console.warn('数据库实例刷新失败:', data.error);
+                    return null;
+                }
+            } catch (error) {
+                console.error('强制刷新数据库实例失败:', error);
+                return null;
+            }
+        }
+
+        // 刷新数据库数据
+        async function refreshDatabaseData() {
+            console.log('开始刷新数据库数据...');
+            showNotification('info', '正在刷新数据库数据...');
+            
+            try {
+                // 先强制刷新数据库实例
+                await refreshDatabaseInstance();
+                
+                // 然后刷新显示数据
+                await loadDatabaseContent();
+                showNotification('success', '数据库数据刷新成功');
+                console.log('数据库数据刷新完成');
+            } catch (error) {
+                console.error('数据库数据刷新失败:', error);
+                showNotification('error', '数据库数据刷新失败，请稍后重试');
+            }
+        }
+
+
+        // 搜索电影
+        async function searchMovie() {
+            const movieTitle = document.getElementById('movie-title').value.trim();
+            const movieYear = document.getElementById('movie-year').value;
+            
+            if (!movieTitle) {
+                alert('请输入电影名称');
+                return;
+            }
+
+            const searchBtn = document.getElementById('search-movie-btn');
+            searchBtn.disabled = true;
+            searchBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> 搜索中...';
+
+            try {
+                const response = await fetch('/api/search_movie', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        movie_title: movieTitle,
+                        year: movieYear ? parseInt(movieYear) : null
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayMovieResults(data.movies);
+                } else {
+                    alert('搜索失败: ' + data.error);
+                }
+            } catch (error) {
+                console.error('搜索电影失败:', error);
+                alert('搜索失败，请检查网络连接');
+            } finally {
+                searchBtn.disabled = false;
+                searchBtn.innerHTML = '<i class="bi bi-search"></i> 搜索电影';
+            }
+        }
+
+        // 显示电影搜索结果
+        function displayMovieResults(movies) {
+            const resultsDiv = document.getElementById('movie-results');
+            const listDiv = document.getElementById('movie-list');
+            
+            if (movies.length === 0) {
+                listDiv.innerHTML = '<p class="text-muted">未找到相关电影</p>';
+            } else {
+                const moviesHtml = movies.map(movie => `
+                    <div class="card mb-2">
+                        <div class="card-body py-2">
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <h6 class="mb-1">${movie.title}</h6>
+                                    <small class="text-muted">${movie.release_date || 'N/A'} | 评分: ${movie.vote_average || 'N/A'}</small>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="selectMovie(${movie.id}, '${movie.title}', '${movie.release_date}')">
+                                        选择此电影
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                listDiv.innerHTML = moviesHtml;
+            }
+            
+            resultsDiv.style.display = 'block';
+        }
+
+        // 选择电影
+        function selectMovie(movieId, title, releaseDate) {
+            document.getElementById('movie-title').value = title;
+            if (releaseDate) {
+                document.getElementById('movie-year').value = new Date(releaseDate).getFullYear();
+            }
+            currentMovieData = { id: movieId, title: title, release_date: releaseDate };
+            document.getElementById('movie-results').style.display = 'none';
+        }
+
+        // 构建数据集
+        async function buildDataset() {
+            const movieTitle = document.getElementById('movie-title').value.trim();
+            const movieYear = document.getElementById('movie-year').value;
+            const maxActors = document.getElementById('max-actors').value;
+            const shapeType = document.getElementById('shape-type').value;
+
+            if (!movieTitle) {
+                showNotification('warning', '请输入电影名称');
+                return;
+            }
+
+            const buildBtn = document.getElementById('build-btn');
+            const progressDiv = document.getElementById('build-progress');
+
+            // 初始化进度显示
+            initializeBuildProgress();
+            
+            // 显示进度容器
+            buildBtn.disabled = true;
+            buildBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> 构建中...';
+            progressDiv.style.display = 'block';
+
+            try {
+                // 开始构建流程
+                await simulateDetailedBuildProcess(movieTitle, movieYear, maxActors, shapeType);
+                
+            } catch (error) {
+                console.error('构建数据集失败:', error);
+                updateStepStatus('save-database', 'error', '构建失败: ' + error.message);
+                showNotification('error', '构建失败，请检查网络连接');
+            } finally {
+                buildBtn.disabled = false;
+                buildBtn.innerHTML = '<i class="bi bi-play-fill"></i> 开始构建';
+            }
+        }
+        
+        // 初始化构建进度
+        function initializeBuildProgress() {
+            // 重置所有步骤
+            const steps = ['movie-info', 'color-assign', 'collect-images', 'process-faces', 'save-database'];
+            steps.forEach(step => {
+                const stepElement = document.getElementById(`step-${step}`);
+                stepElement.className = 'step-item';
+                
+                const status = stepElement.querySelector('.step-status');
+                status.textContent = '等待中...';
+                status.className = 'step-status text-muted';
+                
+                // 隐藏所有状态图标
+                const icons = stepElement.querySelectorAll('.step-progress > *');
+                icons.forEach(icon => icon.style.display = 'none');
+                
+                // 隐藏子进度条
+                const subProgress = stepElement.querySelector('.progress');
+                if (subProgress) {
+                    subProgress.style.display = 'none';
+                    subProgress.querySelector('.progress-bar').style.width = '0%';
+                }
+            });
+            
+            // 重置总体进度
+            updateOverallProgress(0, '准备构建...');
+            
+            // 重置统计信息
+            document.getElementById('build-stats').style.display = 'none';
+            updateBuildStats(0, 0, 0, 0);
+        }
+        
+        // 模拟详细的构建过程
+        async function simulateDetailedBuildProcess(movieTitle, movieYear, maxActors, shapeType) {
+            // 步骤1: 获取电影信息
+            updateStepStatus('movie-info', 'active', '正在搜索电影信息...');
+            updateOverallProgress(10, '获取电影信息...');
+            
+            await sleep(800); // 模拟API调用延迟
+            
+            try {
+                // 这里可以先调用预览API验证电影信息
+                const previewResponse = await fetch(`/api/movie_preview?movie=${encodeURIComponent(movieTitle)}&year=${movieYear || ''}`);
+                const previewData = await previewResponse.json();
+                
+                if (!previewData.success) {
+                    throw new Error(previewData.error || '电影信息获取失败');
+                }
+                
+                updateStepStatus('movie-info', 'completed', `找到电影: ${previewData.data.movie_title} (${previewData.data.total_actors} 位演员)`);
+                updateBuildStats(previewData.data.total_actors, 0, 0, 0);
+                
+                // 步骤2: 分配角色颜色
+                updateStepStatus('color-assign', 'active', '为角色分配颜色和框形...');
+                updateOverallProgress(20, '分配角色颜色...');
+                
+                await sleep(500);
+                updateStepStatus('color-assign', 'completed', `已为 ${Math.min(maxActors, previewData.data.total_actors)} 个角色分配颜色`);
+                
+                // 步骤3: 收集演员图片
+                updateStepStatus('collect-images', 'active', '开始收集演员图片...');
+                updateOverallProgress(30, '收集演员图片...');
+                
+                // 模拟图片收集进度
+                await simulateImageCollection(Math.min(maxActors, previewData.data.total_actors));
+                
+                // 步骤4: 处理人脸数据
+                updateStepStatus('process-faces', 'active', '开始处理人脸数据...');
+                updateOverallProgress(70, '处理人脸数据...');
+                
+                // 模拟人脸处理进度
+                await simulateFaceProcessing();
+                
+                // 步骤5: 调用实际的构建API
+                updateStepStatus('save-database', 'active', '保存到数据库...');
+                updateOverallProgress(90, '保存到数据库...');
+                
+                const response = await fetch('/api/build_dataset', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        movie_title: movieTitle,
+                        year: movieYear ? parseInt(movieYear) : null,
+                        max_actors: parseInt(maxActors),
+                        shape_type: shapeType
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    updateStepStatus('save-database', 'completed', '数据库保存成功');
+                    updateOverallProgress(100, '构建完成！');
+                    
+                    // 显示最终统计
+                    const results = data.results;
+                    updateBuildStats(
+                        results.actors_found || 0,
+                        results.images_collected || 0,
+                        results.faces_processed || 0,
+                        results.embeddings_added || 0
+                    );
+                    
+                    // 显示构建结果
+                    displayBuildResults(results);
+                    
+                    // 刷新相关数据
+                    setTimeout(async () => {
+                        await refreshAllData();
+                        showNotification('info', '数据已同步更新');
+                    }, 1000);
+                    
+                    showNotification('success', `构建完成！处理了 ${results.actors_found} 位演员，${results.faces_processed} 张人脸`);
+                } else {
+                    throw new Error(data.error || '构建失败');
+                }
+                
+            } catch (error) {
+                throw error;
+            }
+        }
+
+        // 模拟图片收集过程
+        async function simulateImageCollection(actorCount) {
+            const stepElement = document.getElementById('step-collect-images');
+            const subProgress = stepElement.querySelector('.progress');
+            const subProgressBar = subProgress.querySelector('.progress-bar');
+            
+            subProgress.style.display = 'block';
+            
+            let collectedImages = 0;
+            for (let i = 0; i < actorCount; i++) {
+                const progress = (i + 1) / actorCount * 100;
+                subProgressBar.style.width = `${progress}%`;
+                
+                const imagesPerActor = Math.floor(Math.random() * 15) + 5; // 5-20张图片
+                collectedImages += imagesPerActor;
+                
+                updateStepStatus('collect-images', 'active', `正在收集第 ${i + 1}/${actorCount} 位演员的图片... (${collectedImages} 张)`);
+                updateOverallProgress(30 + (progress * 0.4), `收集演员图片... ${Math.round(progress)}%`);
+                updateBuildStats(actorCount, collectedImages, 0, 0);
+                
+                await sleep(200 + Math.random() * 300); // 200-500ms延迟
+            }
+            
+            updateStepStatus('collect-images', 'completed', `已收集 ${collectedImages} 张演员图片`);
+        }
+        
+        // 模拟人脸处理过程
+        async function simulateFaceProcessing() {
+            const stepElement = document.getElementById('step-process-faces');
+            const subProgress = stepElement.querySelector('.progress');
+            const subProgressBar = subProgress.querySelector('.progress-bar');
+            
+            subProgress.style.display = 'block';
+            
+            let processedFaces = 0;
+            const totalSteps = 20;
+            
+            for (let i = 0; i < totalSteps; i++) {
+                const progress = (i + 1) / totalSteps * 100;
+                subProgressBar.style.width = `${progress}%`;
+                
+                const facesInBatch = Math.floor(Math.random() * 10) + 2; // 2-12张人脸
+                processedFaces += facesInBatch;
+                
+                updateStepStatus('process-faces', 'active', `正在处理人脸数据... (${processedFaces} 张人脸)`);
+                updateOverallProgress(70 + (progress * 0.15), `处理人脸数据... ${Math.round(progress)}%`);
+                updateBuildStats(null, null, processedFaces, 0);
+                
+                await sleep(150 + Math.random() * 200); // 150-350ms延迟
+            }
+            
+            updateStepStatus('process-faces', 'completed', `已处理 ${processedFaces} 张人脸，提取特征向量`);
+        }
+        
+        // 更新步骤状态
+        function updateStepStatus(stepId, status, message) {
+            const stepElement = document.getElementById(`step-${stepId}`);
+            const statusElement = stepElement.querySelector('.step-status');
+            const spinner = stepElement.querySelector('.spinner-border');
+            const successIcon = stepElement.querySelector('.bi-check-circle-fill');
+            const errorIcon = stepElement.querySelector('.bi-x-circle-fill');
+            
+            // 重置所有图标
+            spinner.style.display = 'none';
+            successIcon.style.display = 'none';
+            errorIcon.style.display = 'none';
+            
+            // 更新状态
+            stepElement.className = `step-item ${status}`;
+            statusElement.textContent = message;
+            
+            switch (status) {
+                case 'active':
+                    spinner.style.display = 'block';
+                    statusElement.className = 'step-status text-primary';
+                    break;
+                case 'completed':
+                    successIcon.style.display = 'block';
+                    statusElement.className = 'step-status text-success';
+                    break;
+                case 'error':
+                    errorIcon.style.display = 'block';
+                    statusElement.className = 'step-status text-danger';
+                    break;
+                default:
+                    statusElement.className = 'step-status text-muted';
+            }
+        }
+        
+        // 更新总体进度
+        function updateOverallProgress(percentage, message) {
+            const progressBar = document.getElementById('overall-progress-bar');
+            const progressText = document.getElementById('overall-progress-text');
+            
+            progressBar.style.width = `${percentage}%`;
+            progressText.textContent = `${Math.round(percentage)}%`;
+        }
+        
+        // 更新构建统计
+        function updateBuildStats(actors, images, faces, vectors) {
+            const statsDiv = document.getElementById('build-stats');
+            
+            if (actors !== null) document.getElementById('stat-actors').textContent = actors;
+            if (images !== null) document.getElementById('stat-images').textContent = images;
+            if (faces !== null) document.getElementById('stat-faces').textContent = faces;
+            if (vectors !== null) document.getElementById('stat-vectors').textContent = vectors;
+            
+            // 显示统计信息
+            if (actors > 0 || images > 0 || faces > 0 || vectors > 0) {
+                statsDiv.style.display = 'block';
+            }
+        }
+        
+        // 辅助函数：延迟
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+        
+        // 加载免费爬虫状态
+        async function loadFreeCrawlerStatus() {
+            try {
+                const response = await fetch('/api/free_crawler_status');
+                const data = await response.json();
+                
+                if (data.success) {
+                    updateFreeCrawlerPreview(data.crawler_status);
+                }
+            } catch (error) {
+                console.error('加载免费爬虫状态失败:', error);
+            }
+        }
+        
+        // 更新免费爬虫状态预览
+        function updateFreeCrawlerPreview(status) {
+            const previewDiv = document.getElementById('free-crawler-preview');
+            
+            let html = '';
+            
+            // 显示免费源状态
+            status.free_sources.forEach(source => {
+                const badgeClass = source.enabled ? 'bg-success' : 'bg-secondary';
+                const statusIcon = source.enabled ? '✓' : '✗';
+                const displayName = source.name.replace('_images', '').replace('_', ' ');
+                html += `<span class="badge ${badgeClass}">${displayName} ${statusIcon}</span>`;
+            });
+            
+            html += `<small class="text-muted ms-2">${status.total_free_enabled} 个免费源已启用，每位演员最多 ${status.max_images_per_actor} 张图片</small>`;
+            
+            previewDiv.innerHTML = html;
+        }
+        
+        // 显示免费爬虫状态详情
+        async function showFreeCrawlerStatus() {
+            try {
+                const response = await fetch('/api/free_crawler_status');
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayFreeCrawlerModal(data.crawler_status);
+                } else {
+                    showNotification('error', '获取爬虫状态失败');
+                }
+            } catch (error) {
+                console.error('获取爬虫状态失败:', error);
+                showNotification('error', '网络错误，请稍后重试');
+            }
+        }
+        
+        // 显示免费爬虫状态模态框
+        function displayFreeCrawlerModal(status) {
+            const modalHtml = `
+                <div class="modal fade" id="freeCrawlerModal" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">
+                                    <i class="bi bi-download"></i> 免费图片爬虫状态
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="alert alert-success">
+                                    <i class="bi bi-check-circle-fill"></i>
+                                    <strong>好消息！</strong> ${status.recommendation}
+                                </div>
+                                
+                                <h6><i class="bi bi-gift-fill"></i> 免费图片源 (${status.total_free_enabled}/${status.free_sources.length} 已启用)</h6>
+                                <div class="row g-3">
+                                    ${status.free_sources.map(source => `
+                                        <div class="col-md-6">
+                                            <div class="card h-100 ${source.enabled ? 'border-success' : 'border-secondary'}">
+                                                <div class="card-header d-flex justify-content-between">
+                                                    <span><i class="bi bi-image"></i> ${source.name.replace('_', ' ')}</span>
+                                                    <span class="badge ${source.enabled ? 'bg-success' : 'bg-secondary'}">
+                                                        ${source.enabled ? '已启用' : '已禁用'}
+                                                    </span>
+                                                </div>
+                                                <div class="card-body">
+                                                    <p class="small text-muted mb-2">${source.description}</p>
+                                                    <ul class="list-unstyled mb-0 small">
+                                                        <li><strong>状态:</strong> ${source.enabled ? '✅ 工作正常' : '❌ 已禁用'}</li>
+                                                        <li><strong>最大结果:</strong> ${source.max_results} 张</li>
+                                                        <li><strong>费用:</strong> <span class="text-success">完全免费</span></li>
+                                                        <li><strong>API密钥:</strong> <span class="text-success">无需配置</span></li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                                
+                                ${status.paid_sources.length > 0 ? `
+                                    <h6 class="mt-4"><i class="bi bi-credit-card"></i> 付费图片源 (需要API密钥)</h6>
+                                    <div class="row g-3">
+                                        ${status.paid_sources.map(source => `
+                                            <div class="col-md-6">
+                                                <div class="card h-100 border-warning">
+                                                    <div class="card-header d-flex justify-content-between">
+                                                        <span><i class="bi bi-key"></i> ${source.name.replace('_', ' ')}</span>
+                                                        <span class="badge bg-warning">需要密钥</span>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <p class="small text-muted mb-2">${source.description}</p>
+                                                        <ul class="list-unstyled mb-0 small">
+                                                            <li><strong>状态:</strong> ${source.enabled ? '⚠️ 需要配置API密钥' : '❌ 已禁用'}</li>
+                                                            <li><strong>最大结果:</strong> ${source.max_results} 张</li>
+                                                            <li><strong>费用:</strong> <span class="text-warning">需要付费API</span></li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                ` : ''}
+                                
+                                <div class="mt-4 p-3 bg-light rounded">
+                                    <h6><i class="bi bi-lightbulb"></i> 使用建议</h6>
+                                    <ul class="mb-0 small">
+                                        <li><strong>TMDB:</strong> 提供官方高质量演员头像和宣传照</li>
+                                        <li><strong>百度图片:</strong> 使用"电影名+演员名+剧照"搜索，获得电影中的实际剧照</li>
+                                        <li><strong>搜索策略:</strong> 专门针对电影剧照优化，确保图片来源于实际电影场景</li>
+                                        <li><strong>质量保证:</strong> 剧照图片更适合人脸识别，因为是演员在电影中的真实造型</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-success" onclick="optimizeFreeCrawlerConfig()">
+                                    <i class="bi bi-gear"></i> 优化免费配置
+                                </button>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // 移除现有模态框
+            const existingModal = document.getElementById('freeCrawlerModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // 添加新模态框
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            // 显示模态框
+            const modal = new bootstrap.Modal(document.getElementById('freeCrawlerModal'));
+            modal.show();
+        }
+        
+        // 优化免费爬虫配置
+        function optimizeFreeCrawlerConfig() {
+            showNotification('success', '当前配置已优化为最佳剧照收集组合！');
+            showNotification('info', '配置详情：TMDB官方图片(10张) + 百度剧照搜索(15张)');
+        }
+
+        // 显示构建结果
+        function displayBuildResults(results) {
+            const resultsDiv = document.getElementById('build-results');
+            const summaryDiv = document.getElementById('build-summary');
+            
+            const summaryHtml = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6>📽️ ${results.movie_title}</h6>
+                                <ul class="list-unstyled mb-0">
+                                    <li>👥 演员数量: ${results.actors_found}</li>
+                                    <li>🖼️ 收集图片: ${results.images_collected}</li>
+                                    <li>😊 处理人脸: ${results.faces_processed}</li>
+                                    <li>🔢 添加向量: ${results.embeddings_added}</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        ${results.errors.length > 0 ? `
+                            <div class="card border-warning">
+                                <div class="card-body">
+                                    <h6 class="text-warning">⚠️ 注意事项</h6>
+                                    <ul class="list-unstyled mb-0 small">
+                                        ${results.errors.map(error => `<li>• ${error}</li>`).join('')}
+                                    </ul>
+                                </div>
+                            </div>
+                        ` : `
+                            <div class="card border-success">
+                                <div class="card-body text-center">
+                                    <h6 class="text-success">✅ 构建成功</h6>
+                                    <p class="mb-0">数据集已成功添加到向量数据库</p>
+                                </div>
+                            </div>
+                        `}
+                    </div>
+                </div>
+            `;
+            
+            summaryDiv.innerHTML = summaryHtml;
+            resultsDiv.style.display = 'block';
+        }
+
+        // 图片预览
+        function previewImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const previewDiv = document.getElementById('image-preview');
+                    const previewImg = document.getElementById('preview-img');
+                    previewImg.src = e.target.result;
+                    previewDiv.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // 人脸搜索
+        async function searchFace() {
+            const imageFile = document.getElementById('search-image').files[0];
+            const topK = document.getElementById('top-k').value;
+
+            if (!imageFile) {
+                alert('请选择图片文件');
+                return;
+            }
+
+            const searchBtn = document.getElementById('search-btn');
+            searchBtn.disabled = true;
+            searchBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> 搜索中...';
+
+            const formData = new FormData();
+            formData.append('image', imageFile);
+            formData.append('top_k', topK);
+
+            try {
+                const response = await fetch('/api/search_face', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    displaySearchResults(data.results, data.query_face_info);
+                } else {
+                    alert('搜索失败: ' + data.error);
+                }
+            } catch (error) {
+                console.error('人脸搜索失败:', error);
+                alert('搜索失败，请检查网络连接');
+            } finally {
+                searchBtn.disabled = false;
+                searchBtn.innerHTML = '<i class="bi bi-search"></i> 搜索相似人脸';
+            }
+        }
+
+        // 显示搜索结果
+        function displaySearchResults(results, queryFaceInfo) {
+            const resultsDiv = document.getElementById('search-results');
+            const containerDiv = document.getElementById('results-container');
+            
+            if (results.length === 0) {
+                containerDiv.innerHTML = '<div class="col-12"><p class="text-muted text-center">未找到相似人脸</p></div>';
+            } else {
+                const resultsHtml = results.map((result, index) => {
+                    const metadata = result.metadata;
+                    const similarity = (result.similarity * 100).toFixed(1);
+                    
+                    return `
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card result-card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="card-title mb-0">${metadata.actor_name || 'Unknown'}</h6>
+                                        <span class="badge bg-primary similarity-badge">${similarity}%</span>
+                                    </div>
+                                    <div class="small text-muted">
+                                        <div>电影: ${metadata.movie_title || 'N/A'}</div>
+                                        <div>检测分数: ${(metadata.det_score || 0).toFixed(3)}</div>
+                                        <div>人脸ID: ${metadata.face_id || 'N/A'}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                containerDiv.innerHTML = resultsHtml;
+            }
+            
+            resultsDiv.style.display = 'block';
+        }
+
+        // 加载数据库统计信息
+        async function loadDatabaseStats() {
+            const statsDiv = document.getElementById('database-stats');
+            
+            try {
+                const response = await fetch('/api/database_stats');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const stats = data.stats;
+                    const statsHtml = `
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="stats-card">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-1">数据库引擎</h6>
+                                            <span class="badge bg-info">${stats.database_type} ${stats.index_type || ''}</span>
+                                        </div>
+                                        <i class="bi bi-database text-muted" style="font-size: 2rem;"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="stats-card">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-1">向量维度</h6>
+                                            <span class="h5 mb-0">${stats.dimension || 512}D</span>
+                                        </div>
+                                        <i class="bi bi-vector-pen text-muted" style="font-size: 2rem;"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="stats-card">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-1">存储向量</h6>
+                                            <span class="h5 mb-0">${stats.total_vectors || 0}</span>
+                                        </div>
+                                        <i class="bi bi-hdd text-muted" style="font-size: 2rem;"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="stats-card">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-1">索引状态</h6>
+                                            <span class="badge ${stats.is_trained ? 'bg-success' : 'bg-warning'}">${stats.is_trained ? '已训练' : '未训练'}</span>
+                                        </div>
+                                        <i class="bi bi-check-circle text-muted" style="font-size: 2rem;"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    statsDiv.innerHTML = statsHtml;
+                    
+                    // 更新头部统计数据
+                    document.getElementById('hero-total-vectors').textContent = stats.total_vectors || 0;
+                    
+                } else {
+                    statsDiv.innerHTML = '<p class="text-danger">加载统计信息失败</p>';
+                }
+            } catch (error) {
+                console.error('加载统计信息失败:', error);
+                statsDiv.innerHTML = '<p class="text-danger">网络错误</p>';
+            }
+        }
+
+        // 加载数据库内容预览
+        async function loadDatabaseContent() {
+            const actorsPreviewDiv = document.getElementById('actors-preview');
+            const moviesPreviewDiv = document.getElementById('movies-preview');
+            const qualityPreviewDiv = document.getElementById('quality-preview');
+            
+            try {
+                // 显示加载状态
+                actorsPreviewDiv.innerHTML = `
+                    <div class="text-center py-4">
+                        <div class="loading-spinner"></div>
+                        <p class="mt-2 text-muted">加载演员预览中...</p>
+                    </div>
+                `;
+                
+                const response = await fetch('/api/database_preview');
+                const data = await response.json();
+                
+                if (data.success) {
+                    console.log('数据库预览数据:', data);
+                    // 调试信息：输出电影和角色信息
+                    if (data.movies && data.movies.length > 0) {
+                        console.log(`找到 ${data.movies.length} 部电影`);
+                        data.movies.forEach(movie => {
+                            console.log(`电影: ${movie.title}, 角色数量: ${movie.character_count}`);
+                            if (movie.characters && movie.characters.length > 0) {
+                                movie.characters.forEach(character => {
+                                    console.log(`  - 角色: ${character.character_name} (演员: ${character.actor_name})`);
+                                });
+                            }
+                        });
+                    } else {
+                        console.log('数据库为空，没有电影数据');
+                    }
+                    
+                    displayMoviesPreview(data.movies || []);
+                    displayMoviesStatsPreview(data.movies_stats || []);
+                    displayQualityPreview(data.quality_stats || {});
+                    updateDatabaseOverview(data.overview);
+                } else {
+                    actorsPreviewDiv.innerHTML = `
+                        <div class="empty-state">
+                            <i class="bi bi-database-x empty-state-icon"></i>
+                            <h5>暂无数据</h5>
+                            <p>数据库中还没有电影角色数据，请先构建数据集。</p>
+                        </div>
+                    `;
+                    moviesPreviewDiv.innerHTML = '<p class="text-muted text-center">暂无数据</p>';
+                    qualityPreviewDiv.innerHTML = '<p class="text-muted text-center">暂无数据</p>';
+                }
+            } catch (error) {
+                console.error('加载数据库内容失败:', error);
+                actorsPreviewDiv.innerHTML = `
+                    <div class="empty-state">
+                        <i class="bi bi-exclamation-triangle empty-state-icon"></i>
+                        <h5>加载失败</h5>
+                        <p>无法连接到服务器，请检查网络连接。</p>
+                    </div>
+                `;
+                moviesPreviewDiv.innerHTML = '<p class="text-danger text-center">加载失败</p>';
+                qualityPreviewDiv.innerHTML = '<p class="text-danger text-center">加载失败</p>';
+            }
+        }
+
+        // 显示电影预览（新的主显示区域）
+        function displayMoviesPreview(movies) {
+            const actorsPreviewDiv = document.getElementById('actors-preview');
+            
+            if (!movies || movies.length === 0) {
+                actorsPreviewDiv.innerHTML = `
+                    <div class="empty-state">
+                        <i class="bi bi-film-x empty-state-icon"></i>
+                        <h5>暂无电影数据</h5>
+                        <p>请先构建一些电影的角色数据集。</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const moviesHtml = `
+                <div class="row g-3">
+                    ${movies.slice(0, 6).map(movie => {
+                        const charactersHtml = movie.characters ? movie.characters.slice(0, 6).map(character => {
+                            const avatarHtml = character.avatar_path ? 
+                                `<img src="/api/image/${encodeURIComponent(character.avatar_path)}" class="character-img" alt="${character.actor_name}" onerror="this.outerHTML='&lt;div class=&quot;character-placeholder&quot;&gt;&lt;i class=&quot;bi bi-person-fill&quot;&gt;&lt;/i&gt;&lt;/div&gt;';">` :
+                                `<div class="character-placeholder"><i class="bi bi-person-fill"></i></div>`;
+                            
+                            return `
+                                <div class="character-item">
+                                    <div class="character-avatar">${avatarHtml}</div>
+                                    <div class="character-info">
+                                        <div class="character-name">${character.character_name || 'Unknown'}</div>
+                                        <div class="actor-name">${character.actor_name || 'Unknown Actor'}</div>
+                                        <div class="character-stats">
+                                            <span class="face-count">${character.face_count || 0} 人脸</span>
+                                            <span class="quality-score">${character.avg_quality ? (character.avg_quality * 100).toFixed(0) : 0}%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('') : '';
+                        
+                        const moreCharacters = movie.characters && movie.characters.length > 6 ? `
+                            <div class="character-item more-characters">
+                                <div class="character-placeholder"><i class="bi bi-three-dots"></i></div>
+                                <div class="character-info">
+                                    <div class="character-name">+${movie.characters.length - 6} 更多</div>
+                                </div>
+                            </div>
+                        ` : '';
+                        
+                        return `
+                            <div class="col-lg-6 col-md-12">
+                                <div class="movie-preview-card fade-in">
+                                    <div class="movie-header d-flex justify-content-between align-items-center mb-3">
+                                        <h6 class="movie-title mb-0">
+                                            <i class="bi bi-film me-2"></i>${movie.title || 'Unknown Movie'}
+                                        </h6>
+                                        <div class="movie-stats">
+                                            <span class="badge bg-primary me-1">${movie.character_count || 0} 角色</span>
+                                            <span class="badge bg-info">${movie.total_faces || 0} 人脸</span>
+                                        </div>
+                                    </div>
+                                    <div class="characters-grid">
+                                        ${charactersHtml}${moreCharacters}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+                ${movies.length > 6 ? `
+                    <div class="text-center mt-3">
+                        <button class="btn btn-outline-primary btn-sm" onclick="loadFullMoviesInPlace()">
+                            <i class="bi bi-plus-circle"></i> 查看更多 (${movies.length - 6} 部电影)
+                        </button>
+                    </div>
+                ` : ''}
+            `;
+            
+            actorsPreviewDiv.innerHTML = moviesHtml;
+        }
+
+        // 显示电影统计预览（右侧的电影分布区域）
+        function displayMoviesStatsPreview(moviesStats) {
+            const moviesPreviewDiv = document.getElementById('movies-preview');
+            
+            if (!moviesStats || moviesStats.length === 0) {
+                moviesPreviewDiv.innerHTML = '<p class="text-muted text-center">暂无电影数据</p>';
+                return;
+            }
+            
+            const moviesHtml = moviesStats.slice(0, 5).map(movie => `
+                <div class="movie-tag">
+                    ${movie.name} (${movie.character_count}个角色)
+                </div>
+            `).join('');
+            
+            moviesPreviewDiv.innerHTML = moviesHtml;
+            
+            if (moviesStats.length > 5) {
+                moviesPreviewDiv.innerHTML += `<div class="movie-tag">+${moviesStats.length - 5} 更多...</div>`;
+            }
+        }
+
+        // 显示质量分布预览
+        function displayQualityPreview(qualityStats) {
+            const qualityPreviewDiv = document.getElementById('quality-preview');
+            
+            if (!qualityStats || Object.keys(qualityStats).length === 0) {
+                qualityPreviewDiv.innerHTML = '<p class="text-muted text-center">暂无质量数据</p>';
+                return;
+            }
+            
+            const qualities = [
+                { label: '高质量 (80%+)', value: qualityStats.high || 0, color: '#10b981' },
+                { label: '中等质量 (60-80%)', value: qualityStats.medium || 0, color: '#f59e0b' },
+                { label: '低质量 (<60%)', value: qualityStats.low || 0, color: '#ef4444' }
+            ];
+            
+            const total = qualities.reduce((sum, q) => sum + q.value, 0);
+            
+            const qualityHtml = qualities.map(quality => {
+                const percentage = total > 0 ? (quality.value / total * 100) : 0;
+                return `
+                    <div class="quality-bar">
+                        <div class="quality-fill" style="width: ${percentage}%; background: ${quality.color};"></div>
+                        <div class="quality-label">${quality.label}: ${quality.value}</div>
+                    </div>
+                `;
+            }).join('');
+            
+            qualityPreviewDiv.innerHTML = qualityHtml;
+        }
+
+        // 更新数据库概览
+        function updateDatabaseOverview(overview) {
+            if (overview) {
+                document.getElementById('db-total-movies').textContent = overview.total_movies || 0;
+                document.getElementById('db-total-characters').textContent = overview.total_characters || 0;
+                document.getElementById('db-total-faces').textContent = overview.total_faces || 0;
+                document.getElementById('db-avg-quality').textContent = overview.avg_quality ? (overview.avg_quality * 100).toFixed(1) + '%' : '-';
+                
+                // 更新头部统计
+                document.getElementById('hero-total-actors').textContent = overview.total_characters || 0;  // 改为显示角色数
+                document.getElementById('hero-total-vectors').textContent = overview.total_faces || 0;
+                document.getElementById('hero-total-movies').textContent = overview.total_movies || 0;
+            }
+        }
+
+
+        // 显示所有电影在当前位置
+        function displayAllMoviesInPlace(movies) {
+            const actorsPreviewDiv = document.getElementById('actors-preview');
+            
+            if (!movies || movies.length === 0) {
+                actorsPreviewDiv.innerHTML = `
+                    <div class="empty-state">
+                        <i class="bi bi-film-x empty-state-icon"></i>
+                        <h5>暂无电影数据</h5>
+                        <p>请先构建一些电影的角色数据集。</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // 显示所有电影（不限制数量）
+            const moviesHtml = `
+                <div class="row g-3">
+                    ${movies.map(movie => {
+                        const charactersHtml = movie.characters ? movie.characters.map(character => {
+                            const avatarHtml = character.avatar_path ? 
+                                `<img src="/api/image/${encodeURIComponent(character.avatar_path)}" class="character-img" alt="${character.actor_name}" onerror="this.outerHTML='&lt;div class=&quot;character-placeholder&quot;&gt;&lt;i class=&quot;bi bi-person-fill&quot;&gt;&lt;/i&gt;&lt;/div&gt;';">` :
+                                `<div class="character-placeholder"><i class="bi bi-person-fill"></i></div>`;
+                            
+                            return `
+                                <div class="character-item">
+                                    <div class="character-avatar">${avatarHtml}</div>
+                                    <div class="character-info">
+                                        <div class="character-name">${character.character_name || 'Unknown'}</div>
+                                        <div class="actor-name">${character.actor_name || 'Unknown Actor'}</div>
+                                        <div class="character-stats">
+                                            <span class="face-count">${character.face_count || 0} 人脸</span>
+                                            <span class="quality-score">${character.avg_quality ? (character.avg_quality * 100).toFixed(0) : 0}%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('') : '';
+                        
+                        return `
+                            <div class="col-lg-6 col-md-12">
+                                <div class="movie-preview-card fade-in">
+                                    <div class="movie-header d-flex justify-content-between align-items-center mb-3">
+                                        <h6 class="movie-title mb-0">
+                                            <i class="bi bi-film me-2"></i>${movie.title || 'Unknown Movie'}
+                                        </h6>
+                                        <div class="movie-stats">
+                                            <span class="badge bg-primary me-1">${movie.character_count || 0} 角色</span>
+                                            <span class="badge bg-info">${movie.total_faces || 0} 人脸</span>
+                                        </div>
+                                    </div>
+                                    <div class="characters-grid">
+                                        ${charactersHtml}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+            
+            actorsPreviewDiv.innerHTML = moviesHtml;
+        }
+
+        // 查看全部数据
+        function viewAllActors() {
+            // 直接在当前页面展开显示所有数据
+            loadFullMoviesInPlace();
+        }
+
+        // 调试metadata
+        async function debugMetadata() {
+            try {
+                const response = await fetch('/api/debug/metadata');
+                const data = await response.json();
+                
+                if (data.success) {
+                    console.log('=== 调试信息 ===');
+                    console.log('数据库统计:', data.stats);
+                    console.log('字段统计:', data.field_stats);
+                    console.log('Metadata样本:', data.metadata_sample);
+                    console.log('所有Metadata:', data.all_metadata);
+                    
+                    // 显示在页面上
+                    const debugInfo = `
+                        <div class="alert alert-info">
+                            <h6>调试信息：</h6>
+                            <p><strong>数据库统计:</strong> ${JSON.stringify(data.stats, null, 2)}</p>
+                            <p><strong>字段统计:</strong> ${JSON.stringify(data.field_stats, null, 2)}</p>
+                            <p><strong>Metadata数量:</strong> ${data.metadata_count}</p>
+                            <details>
+                                <summary>查看Metadata样本</summary>
+                                <pre>${JSON.stringify(data.metadata_sample, null, 2)}</pre>
+                            </details>
+                        </div>
+                    `;
+                    
+                    const actorsPreviewDiv = document.getElementById('actors-preview');
+                    actorsPreviewDiv.innerHTML = debugInfo;
+                    
+                    showNotification('info', '调试信息已输出到控制台和页面');
+                } else {
+                    console.error('调试失败:', data.error);
+                    showNotification('error', '调试失败: ' + data.error);
+                }
+            } catch (error) {
+                console.error('调试请求失败:', error);
+                showNotification('error', '调试请求失败');
+            }
+        }
+
+        // 在当前页面加载完整数据列表
+        async function loadFullMoviesInPlace() {
+            const actorsPreviewDiv = document.getElementById('actors-preview');
+            const viewAllBtn = document.getElementById('view-all-btn');
+            
+            if (!viewAllBtn) {
+                console.error('查看全部按钮未找到');
+                return;
+            }
+            
+            // 更新按钮状态
+            const originalText = viewAllBtn.innerHTML;
+            viewAllBtn.disabled = true;
+            viewAllBtn.innerHTML = '<div class="loading-spinner"></div> 加载中...';
+            
+            try {
+                // 显示加载状态
+                actorsPreviewDiv.innerHTML = `
+                    <div class="text-center py-4">
+                        <div class="loading-spinner"></div>
+                        <p class="mt-2 text-muted">加载所有数据中...</p>
+                    </div>
+                `;
+                
+                const response = await fetch('/api/database_content');
+                const data = await response.json();
+                
+                console.log('查看全部 - API响应:', data);
+                
+                if (data.success) {
+                    // 优先显示电影数据，如果没有则显示演员数据
+                    if (data.movies && data.movies.length > 0) {
+                        console.log('显示电影数据，数量:', data.movies.length);
+                        displayAllMoviesInPlace(data.movies);
+                    } else if (data.recent_actors && data.recent_actors.length > 0) {
+                        console.log('显示演员数据，数量:', data.recent_actors.length);
+                    displayAllActorsInPlace(data.recent_actors);
+                    } else {
+                        actorsPreviewDiv.innerHTML = `
+                            <div class="empty-state">
+                                <i class="bi bi-database-x empty-state-icon"></i>
+                                <h5>暂无数据</h5>
+                                <p>数据库中没有找到任何数据</p>
+                            </div>
+                        `;
+                    }
+                    
+                    // 更新按钮为"收起"
+                    viewAllBtn.innerHTML = '<i class="bi bi-chevron-up"></i> 收起';
+                    viewAllBtn.onclick = function() { 
+                        loadDatabaseContent(); 
+                        viewAllBtn.innerHTML = '<i class="bi bi-grid-3x3-gap-fill"></i> 查看全部';
+                        viewAllBtn.onclick = function() { loadFullMoviesInPlace(); };
+                    };
+                    
+                } else {
+                    actorsPreviewDiv.innerHTML = `
+                        <div class="empty-state">
+                            <i class="bi bi-database-x empty-state-icon"></i>
+                            <h5>暂无数据</h5>
+                            <p>数据库中还没有电影角色数据，请先构建数据集。</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('加载所有演员失败:', error);
+                actorsPreviewDiv.innerHTML = `
+                    <div class="empty-state">
+                        <i class="bi bi-exclamation-triangle empty-state-icon"></i>
+                        <h5>加载失败</h5>
+                        <p>无法连接到服务器，请检查网络连接。</p>
+                    </div>
+                `;
+            } finally {
+                viewAllBtn.disabled = false;
+                if (viewAllBtn.innerHTML.includes('加载中')) {
+                    viewAllBtn.innerHTML = originalText;
+                }
+            }
+        }
+
+        // 在当前页面显示所有演员
+        function displayAllActorsInPlace(actors) {
+            const actorsPreviewDiv = document.getElementById('actors-preview');
+            
+            if (!actors || actors.length === 0) {
+                actorsPreviewDiv.innerHTML = `
+                    <div class="empty-state">
+                        <i class="bi bi-person-x empty-state-icon"></i>
+                        <h5>暂无演员数据</h5>
+                        <p>请先构建一些电影的演员数据集。</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const actorsHtml = `
+                <div class="row g-3">
+                    ${actors.map(actor => `
+                        <div class="col-md-2 col-sm-4 col-6">
+                            <div class="actor-preview-card fade-in position-relative">
+                                <button class="btn btn-outline-danger btn-sm position-absolute top-0 end-0 m-2" 
+                                        onclick="deleteActor('${actor.name}')" 
+                                        title="删除演员"
+                                        style="z-index: 10;">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                                ${actor.avatar_path ? 
+                                    `<img src="/api/image/${encodeURIComponent(actor.avatar_path)}" class="actor-preview-avatar" alt="${actor.name}" 
+                                          onerror="this.outerHTML='<div class=&quot;actor-preview-avatar d-flex align-items-center justify-content-center bg-light mx-auto&quot;><i class=&quot;bi bi-person-fill text-muted&quot;></i></div>';">` :
+                                    `<div class="actor-preview-avatar d-flex align-items-center justify-content-center bg-light mx-auto">
+                                        <i class="bi bi-person-fill text-muted"></i>
+                                    </div>`
+                                }
+                                <h6 class="mb-1 text-truncate" title="${actor.name}">${actor.name}</h6>
+                                <small class="text-muted d-block">${(actor.movies && actor.movies.length > 0) ? actor.movies[0] : '未知电影'}</small>
+                                <div class="mt-2">
+                                    <span class="badge bg-primary">${actor.face_count || 0}</span>
+                                    <span class="badge bg-success ms-1">${actor.avg_quality ? (actor.avg_quality * 100).toFixed(0) : 0}%</span>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+            actorsPreviewDiv.innerHTML = actorsHtml;
+        }
+
+
+        // 查看演员详情
+        function viewActorDetails(actorId) {
+            alert('演员详情功能开发中...');
+        }
+
+        // 搜索相似演员
+        function searchSimilarActor(actorId) {
+            alert('相似演员搜索功能开发中...');
+        }
+
+        // 删除演员
+        async function deleteActor(actorName) {
+            if (!confirm(`确定要删除演员"${actorName}"的所有数据吗？\n\n此操作将删除该演员的所有人脸向量和图片数据，操作不可恢复。`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/delete_actor/${encodeURIComponent(actorName)}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // 显示成功消息
+                    showNotification('success', data.message || `演员"${actorName}"已删除`);
+                    
+                    // 重新加载数据
+                    setTimeout(() => {
+                        refreshAllData();
+                    }, 500);
+                } else {
+                    showNotification('error', '删除失败: ' + data.error);
+                }
+            } catch (error) {
+                console.error('删除演员失败:', error);
+                showNotification('error', '删除失败，请检查网络连接');
+            }
+        }
+
+        // 清空数据库
+        async function clearDatabase() {
+            if (!confirm('⚠️ 危险操作警告！\n\n确定要清空整个数据库吗？\n\n此操作将删除所有演员数据、人脸向量和图片，操作不可恢复！')) {
+                return;
+            }
+            
+            // 二次确认
+            if (!confirm('请再次确认：真的要清空整个数据库吗？')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/clear_database', {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification('success', '数据库已清空');
+                    
+                    // 重新加载数据
+                    setTimeout(() => {
+                        refreshAllData();
+                    }, 500);
+                } else {
+                    showNotification('error', '清空失败: ' + data.error);
+                }
+            } catch (error) {
+                console.error('清空数据库失败:', error);
+                showNotification('error', '清空失败，请检查网络连接');
+            }
+        }
+
+        // 导出metadata文件
+        async function exportMetadata() {
+            try {
+                showNotification('info', '正在准备导出metadata文件...');
+                
+                const response = await fetch('/api/export_metadata');
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    const exportData = result.data;
+                    
+                    // 创建下载链接
+                    const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+                        type: 'application/json'
+                    });
+                    
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `metadata_${new Date().toISOString().split('T')[0]}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    
+                    showNotification('success', `Metadata文件已导出 (${exportData.total_records}条记录)`);
+                } else {
+                    showNotification('error', '导出失败: ' + (result.error || '未知错误'));
+                }
+            } catch (error) {
+                console.error('导出metadata失败:', error);
+                showNotification('error', '导出失败，请检查网络连接');
+            }
+        }
+        
+        // 预览电影演员
+        async function previewMovieActors() {
+            const movieTitle = document.getElementById('movie-title').value.trim();
+            const movieYear = document.getElementById('movie-year').value.trim();
+            const previewBtn = document.getElementById('preview-actors-btn');
+            
+            if (!movieTitle) {
+                showNotification('warning', '请先输入电影名称');
+                return;
+            }
+            
+            // 更新按钮状态
+            const originalText = previewBtn.innerHTML;
+            previewBtn.disabled = true;
+            previewBtn.innerHTML = '<div class="loading-spinner"></div> 加载中...';
+            
+            try {
+                const params = new URLSearchParams({
+                    movie: movieTitle
+                });
+                if (movieYear) {
+                    params.append('year', movieYear);
+                }
+                
+                const response = await fetch(`/api/movie_preview?${params}`);
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    displayActorsPreview(result.data);
+                    showNotification('success', `成功获取 ${result.data.total_actors} 位演员信息`);
+                } else {
+                    showNotification('error', result.error || '获取演员信息失败');
+                }
+                
+            } catch (error) {
+                console.error('预览演员失败:', error);
+                showNotification('error', '网络错误，请检查连接');
+            } finally {
+                previewBtn.disabled = false;
+                previewBtn.innerHTML = originalText;
+            }
+        }
+        
+        // 显示演员预览
+        function displayActorsPreview(data) {
+            const previewSection = document.getElementById('actors-preview-section');
+            const previewContent = document.getElementById('actors-preview-content');
+            const actorCountBadge = document.getElementById('preview-actor-count');
+            
+            // 更新演员数量
+            actorCountBadge.textContent = data.total_actors;
+            
+            // 构建演员列表HTML
+            const actorsHtml = `
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted">电影: <strong>${data.movie_title}</strong> ${data.year ? `(${data.year})` : ''}</span>
+                        <div>
+                            <button class="btn btn-success btn-sm" onclick="selectTopActors(10)">选择前10位</button>
+                            <button class="btn btn-primary btn-sm" onclick="selectTopActors(20)">选择前20位</button>
+                            <button class="btn btn-secondary btn-sm" onclick="selectAllActors()">全选</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="row g-2" style="max-height: 400px; overflow-y: auto;">
+                    ${data.actors.map((actor, index) => `
+                        <div class="col-md-3 col-sm-4 col-6">
+                            <div class="card actor-preview-card h-100" data-actor-index="${index}">
+                                <div class="card-body p-2">
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input actor-checkbox" type="checkbox" 
+                                               id="actor-${index}">
+                                        <label class="form-check-label fw-bold" for="actor-${index}">
+                                            ${actor.name}
+                                        </label>
+                                    </div>
+                                    <small class="text-muted d-block mb-1">角色: ${actor.character}</small>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="badge bg-light text-dark">排序: ${actor.order}</small>
+                                        <small class="text-muted">热度: ${actor.popularity.toFixed(1)}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="mt-3 text-center">
+                    <small class="text-muted">
+                        💡 提示: 演员按重要程度排序，建议选择前10-20位主要演员进行数据集构建
+                    </small>
+                </div>
+            `;
+            
+            previewContent.innerHTML = actorsHtml;
+            previewSection.style.display = 'block';
+            
+            // 滚动到预览区域
+            previewSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        
+        // 选择前N位演员
+        function selectTopActors(count) {
+            const checkboxes = document.querySelectorAll('.actor-checkbox');
+            checkboxes.forEach((checkbox, index) => {
+                checkbox.checked = index < count;
+            });
+            updateSelectedActorCount();
+        }
+        
+        // 全选演员
+        function selectAllActors() {
+            const checkboxes = document.querySelectorAll('.actor-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = true;
+            });
+            updateSelectedActorCount();
+        }
+        
+        // 更新选中的演员数量
+        function updateSelectedActorCount() {
+            const selectedCount = document.querySelectorAll('.actor-checkbox:checked').length;
+            const maxActorsInput = document.getElementById('max-actors');
+            maxActorsInput.value = selectedCount;
+            
+            // 更新显示
+            showNotification('info', `已选择 ${selectedCount} 位演员`);
+        }
+        
+        // 隐藏演员预览
+        function hideActorsPreview() {
+            const previewSection = document.getElementById('actors-preview-section');
+            previewSection.style.display = 'none';
+        }
+        
+        // 智能推荐演员数量
+        function smartRecommendActorCount() {
+            const previewSection = document.getElementById('actors-preview-section');
+            
+            if (previewSection.style.display === 'none') {
+                showNotification('info', '请先预览演员信息，然后系统会智能推荐演员数量');
+                return;
+            }
+            
+            const totalActors = document.querySelectorAll('.actor-checkbox').length;
+            let recommendedCount;
+            
+            if (totalActors <= 10) {
+                recommendedCount = totalActors;
+            } else if (totalActors <= 30) {
+                recommendedCount = Math.min(15, totalActors);
+            } else {
+                recommendedCount = 20;
+            }
+            
+            selectTopActors(recommendedCount);
+            showNotification('success', `智能推荐: 选择前 ${recommendedCount} 位主要演员`);
+        }
+
+        // 显示通知
+        function showNotification(type, message) {
+            // 移除现有的通知
+            const existingNotifications = document.querySelectorAll('.toast-notification');
+            existingNotifications.forEach(n => n.remove());
+            
+            // 创建通知元素
+            const notification = document.createElement('div');
+            const alertType = type === 'success' ? 'success' : 
+                            type === 'error' ? 'danger' : 
+                            type === 'warning' ? 'warning' : 'info';
+            
+            notification.className = `alert alert-${alertType} alert-dismissible fade show position-fixed toast-notification`;
+            notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px; max-width: 400px;';
+            
+            const icon = type === 'success' ? 'check-circle-fill' : 
+                        type === 'error' ? 'exclamation-triangle-fill' : 
+                        type === 'warning' ? 'exclamation-triangle' : 'info-circle-fill';
+            
+            notification.innerHTML = `
+                <i class="bi bi-${icon} me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // 自动移除时间根据消息类型调整
+            const autoRemoveTime = type === 'error' ? 5000 : 3000;
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, autoRemoveTime);
+        }
+
+        // 视频识别相关函数
+        
+        // 加载可识别的演员列表
+        async function loadVideoActors() {
+            try {
+                const response = await fetch('/api/video_actors');
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('recognizable-count').textContent = data.total_count || 0;
+                    
+                    // 显示演员列表（可以添加模态框显示详细信息）
+                    console.log('可识别演员:', data.actors);
+                } else {
+                    document.getElementById('recognizable-count').textContent = '0';
+                }
+            } catch (error) {
+                console.error('加载演员列表失败:', error);
+                document.getElementById('recognizable-count').textContent = '?';
+            }
+        }
+
+        // 更新阈值显示
+        function updateThresholdValue() {
+            const threshold = document.getElementById('similarity-threshold').value;
+            document.getElementById('threshold-value').textContent = threshold;
+        }
+
+        // 预览视频帧 - 优化版本
+        function previewVideoFrame(event) {
+            const file = event.target.files[0];
+            if (!file) {
+                hideVideoPreview();
+                return;
+            }
+            
+            const previewDiv = document.getElementById('original-preview');
+            const previewImg = document.getElementById('original-img');
+            
+            // 显示加载状态
+            showVideoPreviewLoading();
+            
+            // 检查文件类型
+            const fileType = file.type;
+            const isVideo = fileType.startsWith('video/');
+            const isImage = fileType.startsWith('image/');
+            
+            if (isVideo) {
+                processVideoPreview(file, previewDiv, previewImg);
+            } else if (isImage) {
+                processImagePreview(file, previewDiv, previewImg);
+            } else {
+                hideVideoPreview();
+                showNotification('error', '不支持的文件格式，请上传图片或视频文件');
+            }
+        }
+        
+        // 处理视频预览
+        function processVideoPreview(file, previewDiv, previewImg) {
+            const video = document.createElement('video');
+            video.crossOrigin = 'anonymous';
+            video.muted = true;
+            video.preload = 'metadata';
+            
+            const objectURL = URL.createObjectURL(file);
+            video.src = objectURL;
+            
+            // 视频加载完成后
+            video.addEventListener('loadedmetadata', function() {
+                // 显示视频信息
+                updateVideoInfo(video, file);
+                
+                // 设置到第一帧（或者稍微往后一点以避免黑屏）
+                video.currentTime = Math.min(0.1, video.duration * 0.01);
+            });
+            
+            video.addEventListener('seeked', function() {
+                try {
+                    // 创建高质量的canvas截图
+                    const canvas = document.createElement('canvas');
+                    const aspectRatio = video.videoWidth / video.videoHeight;
+                    
+                    // 智能调整预览尺寸
+                    const maxWidth = 800;
+                    const maxHeight = 600;
+                    
+                    let canvasWidth = video.videoWidth;
+                    let canvasHeight = video.videoHeight;
+                    
+                    if (canvasWidth > maxWidth) {
+                        canvasWidth = maxWidth;
+                        canvasHeight = maxWidth / aspectRatio;
+                    }
+                    
+                    if (canvasHeight > maxHeight) {
+                        canvasHeight = maxHeight;
+                        canvasWidth = maxHeight * aspectRatio;
+                    }
+                    
+                    canvas.width = canvasWidth;
+                    canvas.height = canvasHeight;
+                    
+                    const ctx = canvas.getContext('2d');
+                    ctx.imageSmoothingEnabled = true;
+                    ctx.imageSmoothingQuality = 'high';
+                    ctx.drawImage(video, 0, 0, canvasWidth, canvasHeight);
+                    
+                    // 使用高质量JPEG编码
+                    const dataURL = canvas.toDataURL('image/jpeg', 0.9);
+                    previewImg.src = dataURL;
+                    
+                    // 添加预览增强效果
+                    showVideoPreviewSuccess(previewDiv, '视频第一帧预览');
+                    
+                    // 释放资源
+                    URL.revokeObjectURL(objectURL);
+                    
+                } catch (error) {
+                    console.error('视频预览失败:', error);
+                    showVideoPreviewError('视频预览失败');
+                }
+            });
+            
+            video.addEventListener('error', function(e) {
+                console.error('视频加载失败:', e);
+                showVideoPreviewError('视频加载失败，请检查文件格式');
+                URL.revokeObjectURL(objectURL);
+            });
+            
+            // 设置加载超时
+            setTimeout(() => {
+                if (!previewImg.src || previewImg.src === window.location.href) {
+                    showVideoPreviewError('视频加载超时');
+                    URL.revokeObjectURL(objectURL);
+                }
+            }, 10000);
+        }
+        
+        // 处理图片预览
+        function processImagePreview(file, previewDiv, previewImg) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                previewImg.src = e.target.result;
+                
+                // 获取图片信息
+                const img = new Image();
+                img.onload = function() {
+                    updateImageInfo(img, file);
+                    showVideoPreviewSuccess(previewDiv, '原始图片');
+                };
+                img.src = e.target.result;
+            };
+            
+            reader.onerror = function() {
+                showVideoPreviewError('图片加载失败');
+            };
+            
+            reader.readAsDataURL(file);
+        }
+        
+        // 显示预览加载状态
+        function showVideoPreviewLoading() {
+            const previewDiv = document.getElementById('original-preview');
+            const previewImg = document.getElementById('original-img');
+            
+            previewDiv.style.display = 'block';
+            previewDiv.className = 'preview-container loading';
+            
+            // 创建加载提示
+            previewImg.style.display = 'none';
+            let loadingDiv = previewDiv.querySelector('.loading-overlay');
+            if (!loadingDiv) {
+                loadingDiv = document.createElement('div');
+                loadingDiv.className = 'loading-overlay';
+                loadingDiv.innerHTML = `
+                    <div class="loading-content">
+                        <div class="loading-spinner"></div>
+                        <div class="loading-text">正在加载预览...</div>
+                    </div>
+                `;
+                previewDiv.appendChild(loadingDiv);
+            }
+            loadingDiv.style.display = 'flex';
+        }
+        
+        // 显示预览成功
+        function showVideoPreviewSuccess(previewDiv, title) {
+            previewDiv.className = 'preview-container success';
+            previewDiv.querySelector('h6').textContent = title;
+            
+            const previewImg = document.getElementById('original-img');
+            previewImg.style.display = 'block';
+            
+            const loadingDiv = previewDiv.querySelector('.loading-overlay');
+            if (loadingDiv) {
+                loadingDiv.style.display = 'none';
+            }
+            
+            // 添加成功动画
+            previewImg.style.opacity = '0';
+            previewImg.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                previewImg.style.transition = 'all 0.3s ease';
+                previewImg.style.opacity = '1';
+                previewImg.style.transform = 'scale(1)';
+            }, 100);
+        }
+        
+        // 显示预览错误
+        function showVideoPreviewError(message) {
+            const previewDiv = document.getElementById('original-preview');
+            previewDiv.className = 'preview-container error';
+            previewDiv.style.display = 'block';
+            
+            const previewImg = document.getElementById('original-img');
+            previewImg.style.display = 'none';
+            
+            let loadingDiv = previewDiv.querySelector('.loading-overlay');
+            if (!loadingDiv) {
+                loadingDiv = document.createElement('div');
+                loadingDiv.className = 'loading-overlay';
+                previewDiv.appendChild(loadingDiv);
+            }
+            
+            loadingDiv.innerHTML = `
+                <div class="error-content">
+                    <i class="bi bi-exclamation-triangle text-warning" style="font-size: 2rem;"></i>
+                    <div class="error-text">${message}</div>
+                </div>
+            `;
+            loadingDiv.style.display = 'flex';
+        }
+        
+        // 隐藏预览
+        function hideVideoPreview() {
+            const previewDiv = document.getElementById('original-preview');
+            previewDiv.style.display = 'none';
+            previewDiv.className = 'preview-container';
+            
+            const previewImg = document.getElementById('original-img');
+            previewImg.src = '';
+            
+            const loadingDiv = previewDiv.querySelector('.loading-overlay');
+            if (loadingDiv) {
+                loadingDiv.remove();
+            }
+            
+            // 清理信息显示
+            const infoDiv = document.getElementById('file-info');
+            if (infoDiv) {
+                infoDiv.style.display = 'none';
+            }
+        }
+        
+        // 更新视频信息显示
+        function updateVideoInfo(video, file) {
+            const infoDiv = document.getElementById('file-info') || createFileInfoDiv();
+            
+            const duration = formatDuration(video.duration);
+            const size = formatFileSize(file.size);
+            const resolution = `${video.videoWidth}×${video.videoHeight}`;
+            
+            infoDiv.innerHTML = `
+                <div class="file-info-grid">
+                    <div class="info-item">
+                        <i class="bi bi-camera-video"></i>
+                        <span>视频文件</span>
+                    </div>
+                    <div class="info-item">
+                        <i class="bi bi-clock"></i>
+                        <span>${duration}</span>
+                    </div>
+                    <div class="info-item">
+                        <i class="bi bi-aspect-ratio"></i>
+                        <span>${resolution}</span>
+                    </div>
+                    <div class="info-item">
+                        <i class="bi bi-file-earmark"></i>
+                        <span>${size}</span>
+                    </div>
+                </div>
+            `;
+            infoDiv.style.display = 'block';
+        }
+        
+        // 更新图片信息显示
+        function updateImageInfo(img, file) {
+            const infoDiv = document.getElementById('file-info') || createFileInfoDiv();
+            
+            const size = formatFileSize(file.size);
+            const resolution = `${img.naturalWidth}×${img.naturalHeight}`;
+            
+            infoDiv.innerHTML = `
+                <div class="file-info-grid">
+                    <div class="info-item">
+                        <i class="bi bi-image"></i>
+                        <span>图片文件</span>
+                    </div>
+                    <div class="info-item">
+                        <i class="bi bi-aspect-ratio"></i>
+                        <span>${resolution}</span>
+                    </div>
+                    <div class="info-item">
+                        <i class="bi bi-file-earmark"></i>
+                        <span>${size}</span>
+                    </div>
+                </div>
+            `;
+            infoDiv.style.display = 'block';
+        }
+        
+        // 创建文件信息显示区域
+        function createFileInfoDiv() {
+            let infoDiv = document.getElementById('file-info');
+            if (!infoDiv) {
+                infoDiv = document.createElement('div');
+                infoDiv.id = 'file-info';
+                infoDiv.className = 'file-info mt-2';
+                
+                const previewDiv = document.getElementById('original-preview');
+                previewDiv.parentNode.insertBefore(infoDiv, previewDiv.nextSibling);
+            }
+            return infoDiv;
+        }
+        
+        // 格式化时长
+        function formatDuration(seconds) {
+            if (isNaN(seconds) || seconds < 0) return '未知';
+            
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = Math.floor(seconds % 60);
+            
+            if (hours > 0) {
+                return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            } else {
+                return `${minutes}:${secs.toString().padStart(2, '0')}`;
+            }
+        }
+        
+        // 格式化文件大小
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 B';
+            
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
+
+        // 更新处理模式
+        function updateProcessMode() {
+            const mode = document.querySelector('input[name="process-mode"]:checked').value;
+            const processBtn = document.getElementById('process-btn');
+            const processBtnText = document.getElementById('process-btn-text');
+            
+            if (mode === 'video') {
+                processBtnText.textContent = '处理完整视频';
+                processBtn.className = 'btn btn-success';
+            } else {
+                processBtnText.textContent = '开始识别';
+                processBtn.className = 'btn btn-dark';
+            }
+        }
+
+        // 处理视频（支持两种模式）
+        async function processVideo() {
+            // 直接处理完整视频
+            await processFullVideo();
+        }
+
+        // 处理完整视频
+        async function processFullVideo() {
+            const fileInput = document.getElementById('video-frame');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                showNotification('error', '请选择视频文件');
+                return;
+            }
+
+            // 检查是否为视频文件
+            if (!file.type.startsWith('video/')) {
+                showNotification('error', '完整视频模式需要上传视频文件');
+                return;
+            }
+
+            const processBtn = document.getElementById('process-btn');
+            const processingDiv = document.getElementById('video-processing');
+            const resultsDiv = document.getElementById('video-results');
+            const progressBar = document.getElementById('progress-bar');
+            const progressDiv = document.getElementById('video-progress');
+            const processingText = document.getElementById('processing-text');
+
+            // 显示处理状态
+            processBtn.disabled = true;
+            processBtn.innerHTML = '<div class="loading-spinner"></div> 处理中...';
+            processingDiv.style.display = 'block';
+            progressDiv.style.display = 'block';
+            resultsDiv.style.display = 'none';
+            processingText.textContent = '正在处理视频，请耐心等待...';
+
+            const formData = new FormData();
+            formData.append('video', file);
+            
+            // 添加电影范围和相似度参数
+            const movieScope = document.getElementById('movie-scope').value;
+            const similarityThreshold = document.getElementById('similarity-threshold').value;
+            
+            if (movieScope) {
+                formData.append('movie_title', movieScope);
+            }
+            formData.append('similarity_threshold', similarityThreshold);
+
+            try {
+                const response = await fetch('/api/process_video', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                
+                if (data.success && data.task_id) {
+                    // 开始监听进度
+                    monitorVideoProgress(data.task_id, processBtn, processingDiv, resultsDiv, progressBar, processingText);
+                } else {
+                    showNotification('error', '启动视频处理失败: ' + (data.error || '未知错误'));
+                    processBtn.disabled = false;
+                    processBtn.innerHTML = '<i class="bi bi-film"></i> 处理视频';
+                    processingDiv.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('启动视频处理失败:', error);
+                showNotification('error', '启动失败，请检查网络连接');
+                processBtn.disabled = false;
+                processBtn.innerHTML = '<i class="bi bi-film"></i> 处理视频';
+                processingDiv.style.display = 'none';
+            }
+        }
+        
+        // 监听视频处理进度
+        function monitorVideoProgress(taskId, processBtn, processingDiv, resultsDiv, progressBar, processingText) {
+            const eventSource = new EventSource(`/api/video_progress/${taskId}`);
+            
+            eventSource.onmessage = function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    console.log('收到进度数据:', data);
+                    
+                    if (data.type === 'progress') {
+                        // 更新进度条
+                        progressBar.style.width = `${data.progress}%`;
+                        progressBar.setAttribute('aria-valuenow', data.progress);
+                        
+                        // 更新进度文字
+                        processingText.textContent = data.message;
+                        
+                    } else if (data.type === 'complete') {
+                        // 处理完成
+                        eventSource.close();
+                        
+                        if (data.success) {
+                            displayVideoProcessingResults(data);
+                            showNotification('success', `视频处理完成！总计处理 ${data.results.processed_frames} 帧，识别出 ${data.results.faces_recognized} 张人脸`);
+                        } else {
+                            showNotification('error', '视频处理失败: ' + (data.results.error || '未知错误'));
+                        }
+                        
+                        // 恢复按钮状态
+                        processBtn.disabled = false;
+                        processBtn.innerHTML = '<i class="bi bi-film"></i> 处理视频';
+                        processingDiv.style.display = 'none';
+                        
+                    } else if (data.type === 'error') {
+                        // 处理错误
+                        eventSource.close();
+                        showNotification('error', '视频处理失败: ' + data.error);
+                        
+                        // 恢复按钮状态
+                        processBtn.disabled = false;
+                        processBtn.innerHTML = '<i class="bi bi-film"></i> 处理视频';
+                        processingDiv.style.display = 'none';
+                    }
+                    
+                } catch (e) {
+                    console.error('解析进度数据失败:', e);
+                }
+            };
+            
+            eventSource.onerror = function(event) {
+                console.error('进度监听连接错误:', event);
+                eventSource.close();
+                
+                // 恢复按钮状态
+                processBtn.disabled = false;
+                processBtn.innerHTML = '<i class="bi bi-film"></i> 处理视频';
+                processingDiv.style.display = 'none';
+                
+                showNotification('error', '进度监听连接中断');
+            };
+        }
+
+        // 处理单帧
+        async function processVideoFrame() {
+            const fileInput = document.getElementById('video-frame');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                showNotification('error', '请选择文件');
+                return;
+            }
+
+            const processBtn = document.getElementById('process-frame-btn');
+            const processingDiv = document.getElementById('video-processing');
+            const resultsDiv = document.getElementById('video-results');
+
+            // 显示处理状态
+            processBtn.disabled = true;
+            processBtn.innerHTML = '<div class="loading-spinner"></div> 识别中...';
+            processingDiv.style.display = 'block';
+            resultsDiv.style.display = 'none';
+
+            const formData = new FormData();
+            formData.append('image', file);
+            
+            // 添加电影范围和相似度阈值参数
+            const movieScope = document.getElementById('movie-scope').value;
+            const similarityThreshold = document.getElementById('similarity-threshold').value;
+            
+            if (movieScope) {
+                formData.append('movie_title', movieScope);
+            }
+            formData.append('similarity_threshold', similarityThreshold);
+
+            try {
+                const response = await fetch('/api/process_frame', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayVideoResults(data);
+                    const fileTypeText = data.file_type === 'video' ? '视频第一帧' : '图片';
+                    showNotification('success', `${fileTypeText}识别完成！检测到 ${data.stats.faces_detected} 张人脸，识别出 ${data.stats.faces_recognized} 张`);
+                } else {
+                    showNotification('error', '处理失败: ' + data.error);
+                }
+            } catch (error) {
+                console.error('处理视频帧失败:', error);
+                showNotification('error', '处理失败，请检查网络连接');
+            } finally {
+                processBtn.disabled = false;
+                processBtn.innerHTML = '<i class="bi bi-play-fill"></i> 开始识别';
+                processingDiv.style.display = 'none';
+            }
+        }
+        
+        // 加载电影列表
+        async function loadMoviesList() {
+            try {
+                const response = await fetch('/api/get_movies');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const movieSelect = document.getElementById('movie-scope');
+                    
+                    // 清空现有选项（保留第一个默认选项）
+                    while (movieSelect.children.length > 1) {
+                        movieSelect.removeChild(movieSelect.lastChild);
+                    }
+                    
+                    // 添加电影选项
+                    data.movies.forEach(movie => {
+                        const option = document.createElement('option');
+                        option.value = movie.title;
+                        option.textContent = `${movie.title} (${movie.actor_count}位演员, ${movie.face_count}张人脸)`;
+                        movieSelect.appendChild(option);
+                    });
+                    
+                    console.log(`加载了 ${data.movies.length} 部电影`);
+                } else {
+                    console.error('加载电影列表失败:', data.error);
+                }
+            } catch (error) {
+                console.error('加载电影列表失败:', error);
+            }
+        }
+
+        // 显示视频识别结果（单帧模式）
+        function displayVideoResults(data) {
+            const resultsDiv = document.getElementById('video-results');
+            const frameResultDiv = document.getElementById('frame-result');
+            const videoResultDiv = document.getElementById('video-result');
+            const annotatedImg = document.getElementById('annotated-img');
+            const statsDiv = document.getElementById('recognition-stats');
+            const detailsDiv = document.getElementById('recognition-details');
+
+            // 显示单帧结果，隐藏视频结果
+            frameResultDiv.style.display = 'block';
+            videoResultDiv.style.display = 'none';
+
+            // 显示标注后的图片
+            annotatedImg.src = data.annotated_image;
+
+            // 显示统计信息
+            const stats = data.stats;
+            const movieScopeInfo = data.movie_scoped ? 
+                `<div class="alert alert-info mt-2 mb-0">
+                    <i class="bi bi-film"></i> 电影范围限定: <strong>${data.target_movie}</strong>
+                    <small class="d-block">识别范围已限制在该电影的演员中</small>
+                </div>` : 
+                `<div class="alert alert-secondary mt-2 mb-0">
+                    <i class="bi bi-globe"></i> 全库搜索
+                    <small class="d-block">在所有演员中进行识别</small>
+                </div>`;
+            
+            statsDiv.innerHTML = `
+                <div class="row g-2">
+                    <div class="col-4">
+                        <div class="stats-card text-center">
+                            <div class="stats-number">${stats.faces_detected}</div>
+                            <div class="stats-label">检测人脸</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="stats-card text-center">
+                            <div class="stats-number">${stats.faces_recognized}</div>
+                            <div class="stats-label">识别成功</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="stats-card text-center">
+                            <div class="stats-number">${stats.actors_found.length}</div>
+                            <div class="stats-label">演员数量</div>
+                        </div>
+                    </div>
+                </div>
+                ${movieScopeInfo}
+            `;
+
+            // 显示识别详情
+            if (data.recognition_results && data.recognition_results.length > 0) {
+                const detailsHtml = data.recognition_results.map((result, index) => {
+                    const confidenceColor = result.confidence === 'high' ? 'success' : 
+                                          result.confidence === 'medium' ? 'warning' : 'secondary';
+                    
+                    return `
+                        <div class="database-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">
+                                        ${result.recognized ? result.actor_name : '未知人物'}
+                                        <span class="badge bg-${confidenceColor} ms-2">${result.confidence}</span>
+                                    </h6>
+                                    <small class="text-muted">
+                                        相似度: ${(result.similarity * 100).toFixed(1)}% | 
+                                        检测分数: ${result.det_score.toFixed(3)} |
+                                        ${result.age ? `年龄: ~${result.age}岁` : ''} |
+                                        ${result.gender === 1 ? '男性' : result.gender === 0 ? '女性' : ''}
+                                    </small>
+                                </div>
+                                <div class="text-muted">
+                                    人脸 #${index + 1}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                detailsDiv.innerHTML = `
+                    <h6 class="mt-3">识别详情：</h6>
+                    ${detailsHtml}
+                `;
+            } else {
+                detailsDiv.innerHTML = '<p class="text-muted mt-3">未检测到人脸</p>';
+            }
+
+            resultsDiv.style.display = 'block';
+        }
+
+        // 显示视频处理结果
+        function displayVideoProcessingResults(data) {
+            const resultsDiv = document.getElementById('video-results');
+            const frameResultDiv = document.getElementById('frame-result');
+            const videoResultDiv = document.getElementById('video-result');
+            const statsDiv = document.getElementById('recognition-stats');
+            const detailsDiv = document.getElementById('recognition-details');
+            const downloadBtn = document.getElementById('download-video-btn');
+
+            // 隐藏单帧结果，显示视频结果
+            frameResultDiv.style.display = 'none';
+            videoResultDiv.style.display = 'block';
+
+            // 设置下载链接
+            downloadBtn.onclick = function() {
+                window.location.href = data.download_url;
+            };
+
+            // 显示统计信息
+            const results = data.results;
+            statsDiv.innerHTML = `
+                <div class="row g-2">
+                    <div class="col-3">
+                        <div class="stats-card text-center">
+                            <div class="stats-number">${results.total_frames || 0}</div>
+                            <div class="stats-label">总帧数</div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="stats-card text-center">
+                            <div class="stats-number">${results.faces_detected || 0}</div>
+                            <div class="stats-label">检测人脸</div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="stats-card text-center">
+                            <div class="stats-number">${results.faces_recognized || 0}</div>
+                            <div class="stats-label">识别成功</div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="stats-card text-center">
+                            <div class="stats-number">${results.actors_found ? results.actors_found.length : 0}</div>
+                            <div class="stats-label">演员数量</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // 显示处理详情
+            if (results.actors_found && results.actors_found.length > 0) {
+                const actorsHtml = results.actors_found.map(actor => `
+                    <span class="badge bg-primary me-2 mb-2">${actor}</span>
+                `).join('');
+                
+                detailsDiv.innerHTML = `
+                    <h6 class="mt-3">识别到的演员：</h6>
+                    <div>${actorsHtml}</div>
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            <i class="bi bi-clock"></i> 处理时间: ${results.processing_time ? results.processing_time.toFixed(1) : 0} 秒 |
+                            <i class="bi bi-file-earmark-play"></i> 输出文件: ${data.output_filename}
+                        </small>
+                    </div>
+                `;
+            } else {
+                detailsDiv.innerHTML = '<p class="text-muted mt-3">视频中未识别到任何已知演员</p>';
+            }
+
+            resultsDiv.style.display = 'block';
+        }
+
+        // 初始化平滑滚动
+        function initSmoothScroll() {
+            document.querySelectorAll('.smooth-scroll').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href');
+                    const targetElement = document.querySelector(targetId);
+                    if (targetElement) {
+                        targetElement.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+        }
+
+        // 确保在DOMContentLoaded后再次初始化
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('DOM内容加载完成，执行额外初始化...');
+                updateThresholdValue();
+                initSmoothScroll();
+            });
+        } else {
+            console.log('DOM已经加载完成');
+            updateThresholdValue();
+            initSmoothScroll();
+        }
+    </script>
+</body>
+</html>

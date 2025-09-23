@@ -1,0 +1,25 @@
+# 中国环境优化依赖文件
+# 使用清华大学镜像源加速下载
+-i https://pypi.tuna.tsinghua.edu.cn/simple
+
+# 核心依赖
+requests==2.31.0
+beautifulsoup4==4.12.2
+pillow==10.0.1
+numpy==1.24.3
+opencv-python==4.8.1.78
+insightface==0.7.3
+onnxruntime==1.16.3
+scikit-learn==1.3.0
+faiss-cpu==1.7.4
+flask==3.0.0
+flask-cors==4.0.0
+tmdbv3api==1.9.0
+wget==3.2
+tqdm==4.66.1
+python-dotenv==1.0.0
+pyyaml==6.0.1
+loguru==0.7.2
+
+# 可选：加速库 (国内环境推荐)
+gevent==23.9.1

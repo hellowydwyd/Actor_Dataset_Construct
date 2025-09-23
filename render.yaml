@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: actor-dataset-construct
+    runtime: python3
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: PYTHONPATH
+        value: /opt/render/project/src
+      - key: WEB_HOST
+        value: 0.0.0.0
+      - key: WEB_DEBUG
+        value: false
+    disk:
+      name: actor-data
+      mountPath: /opt/render/project/src/data
+      sizeGB: 1
+

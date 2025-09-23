@@ -1,0 +1,71 @@
+# TMDB API配置
+tmdb:
+  api_key: "486ceb284a5bba2fb9dff62fb2d2c819"  # TMDB API密钥
+  base_url: "https://api.themoviedb.org/3"
+  image_base_url: "https://image.tmdb.org/t/p/"
+
+# 图片爬取配置
+crawler:
+  max_images_per_actor: 20  # 每个演员最多收集的图片数量
+  min_face_size: 112        # 最小人脸尺寸
+  image_quality_threshold: 0.7  # 图片质量阈值
+  download_timeout: 30      # 下载超时时间(秒)
+  concurrent_downloads: 5   # 并发下载数量
+  single_person_only: true  # 只保留单人照片
+  max_faces_per_image: 1    # 每张图片最多允许的人脸数
+  
+  # 图片来源配置
+  sources:
+    - name: "tmdb_images"
+      enabled: true
+      max_results: 10
+      description: "TMDB官方图片 (免费，高质量)"
+    - name: "baidu_images"
+      enabled: true
+      max_results: 15
+      description: "百度图片搜索 (免费，剧照丰富)"
+
+# InsightFace配置
+face_recognition:
+  model_name: "buffalo_l"   # 可选: buffalo_s, buffalo_m, buffalo_l
+  detection_threshold: 0.6  # 人脸检测阈值
+  embedding_dim: 512        # 特征向量维度
+  face_alignment: true      # 是否进行人脸对齐
+  
+# 向量数据库配置
+vector_database:
+  type: "faiss"            # 可选: faiss, chromadb
+  index_type: "Flat"       # Faiss索引类型 (Flat适合小数据量)
+  dimension: 512           # 向量维度
+  similarity_threshold: 0.8 # 相似度阈值
+  
+  # ChromaDB配置 (如果选择chromadb)
+  chromadb:
+    persist_directory: "./data/embeddings/chromadb"
+    collection_name: "actor_faces"
+
+# 数据存储配置
+storage:
+  images_dir: "./data/images"
+  embeddings_dir: "./data/embeddings"  
+  metadata_dir: "./data/metadata"
+  database_file: "./data/metadata/actors.db"
+
+# 去重配置
+deduplication:
+  face_similarity_threshold: 0.95  # 人脸相似度阈值
+  image_hash_threshold: 0.9        # 图片hash相似度阈值
+  enable_face_clustering: true     # 是否启用人脸聚类去重
+
+# Web界面配置
+web:
+  host: "0.0.0.0"
+  port: 5000
+  debug: true
+
+# 日志配置
+logging:
+  level: "INFO"
+  file: "./logs/system.log"
+  max_size: "10MB"
+  backup_count: 5

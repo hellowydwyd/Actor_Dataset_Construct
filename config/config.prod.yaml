@@ -1,0 +1,74 @@
+# 生产环境配置文件
+# 针对云部署优化
+
+# TMDB API配置
+tmdb:
+  api_key: "${TMDB_API_KEY}"  # 从环境变量读取
+  base_url: "https://api.themoviedb.org/3"
+  image_base_url: "https://image.tmdb.org/t/p/"
+
+# 图片爬取配置 - 生产环境优化
+crawler:
+  max_images_per_actor: 15      # 减少图片数量节省存储
+  min_face_size: 112
+  image_quality_threshold: 0.7
+  download_timeout: 20          # 缩短超时时间
+  concurrent_downloads: 3       # 降低并发数减少内存使用
+  single_person_only: true
+  max_faces_per_image: 1
+  
+  sources:
+    - name: "tmdb_images"
+      enabled: true
+      max_results: 8            # 减少TMDB图片数量
+      description: "TMDB官方图片"
+    - name: "baidu_images"
+      enabled: false            # 生产环境禁用百度搜索
+      max_results: 10
+      description: "百度图片搜索"
+
+# InsightFace配置 - 内存优化
+face_recognition:
+  model_name: "buffalo_l"
+  detection_threshold: 0.6
+  embedding_dim: 512
+  face_alignment: true
+  model_cache: true             # 启用模型缓存
+  lazy_loading: true            # 懒加载模型
+
+# 向量数据库配置
+vector_database:
+  type: "faiss"
+  index_type: "Flat"           # 使用简单索引减少内存
+  dimension: 512
+  similarity_threshold: 0.8
+  
+  chromadb:
+    persist_directory: "./data/embeddings/chromadb"
+    collection_name: "actor_faces"
+
+# 数据存储配置
+storage:
+  images_dir: "./data/images"
+  embeddings_dir: "./data/embeddings"
+  metadata_dir: "./data/metadata"
+  database_file: "./data/metadata/actors.db"
+
+# 去重配置
+deduplication:
+  face_similarity_threshold: 0.95
+  image_hash_threshold: 0.9
+  enable_face_clustering: true
+
+# Web界面配置 - 生产环境
+web:
+  host: "0.0.0.0"
+  port: "${PORT:5000}"         # 支持动态端口
+  debug: false                 # 生产环境关闭调试
+
+# 性能优化配置
+performance:
+  max_upload_size: 50          # MB
+  max_video_duration: 300      # 秒
+  max_concurrent_users: 10     # 并发用户限制
+  request_timeout: 300         # 请求超时时间
