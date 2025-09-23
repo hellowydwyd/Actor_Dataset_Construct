@@ -1,0 +1,17 @@
+# Vercel部署专用依赖 - 精简版
+flask==3.0.3
+flask-cors==4.0.0
+requests==2.32.2
+pillow==10.3.0
+numpy==1.26.4
+opencv-python-headless==4.10.0.84
+scikit-learn==1.4.2
+python-dotenv==1.0.0
+pyyaml==6.0.1
+loguru==0.7.2
+
+# 注意：Vercel有包大小限制，不包含以下大型包：
+# - insightface (太大，使用简化版本)
+# - faiss-cpu (太大，使用内存存储)
+# - selenium (不需要)
+# - chromadb (太大)
