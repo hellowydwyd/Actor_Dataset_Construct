@@ -3,6 +3,17 @@ tmdb:
   api_key: "486ceb284a5bba2fb9dff62fb2d2c819"  # TMDB API密钥
   base_url: "https://api.themoviedb.org/3"
   image_base_url: "https://image.tmdb.org/t/p/"
+  
+  # 代理配置 (Cloud Studio环境适配)
+  proxy:
+    enabled: false  # 设置为true启用代理
+    http_proxy: ""   # HTTP代理地址，如: http://proxy-server:port
+    https_proxy: ""  # HTTPS代理地址，如: http://proxy-server:port
+  
+  # 网络配置
+  timeout: 30        # 请求超时时间(秒)
+  max_retries: 5     # 最大重试次数
+  retry_delay: 2     # 重试延迟(秒)
 
 # 图片爬取配置
 crawler:

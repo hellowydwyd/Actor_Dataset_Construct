@@ -1,4 +1,4 @@
-# 核心依赖 - 基于conda环境优化
+# 核心依赖 
 requests==2.32.2
 beautifulsoup4==4.12.3
 selenium==4.15.2
