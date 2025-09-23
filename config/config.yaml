@@ -14,6 +14,10 @@ tmdb:
   timeout: 30        # 请求超时时间(秒)
   max_retries: 5     # 最大重试次数
   retry_delay: 2     # 重试延迟(秒)
+  # SSL配置 (Cloud Studio环境)
+  ssl_verify: false    # 禁用SSL验证解决Cloud Studio连接问题
+  timeout: 30          # 增加超时时间
+
 
 # 图片爬取配置
 crawler:

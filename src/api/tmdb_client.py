@@ -6,6 +6,7 @@ TMDB API客户端
 import requests
 import time
 import os
+import urllib3
 from typing import List, Dict, Any, Optional
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
@@ -32,6 +33,9 @@ class TMDBClient:
         self.is_cloud_studio = self._detect_cloud_studio()
         if self.is_cloud_studio:
             logger.info("检测到Cloud Studio环境，启用网络适配模式")
+            # 禁用SSL警告 (仅在Cloud Studio环境)
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+            logger.info("已禁用SSL验证以适配Cloud Studio环境")
         
         # 创建会话并配置
         self.session = requests.Session()
@@ -140,8 +144,8 @@ class TMDBClient:
         
         url = f"{self.base_url}/{endpoint.lstrip('/')}"
         
-        # 多次尝试策略
-        attempts = 3 if self.is_cloud_studio else 1
+        # 多次尝试策略 (Cloud Studio环境增加重试次数)
+        attempts = 5 if self.is_cloud_studio else 1
         last_exception = None
         
         for attempt in range(attempts):
@@ -150,7 +154,12 @@ class TMDBClient:
                     logger.info(f"TMDB API 重试请求 (第{attempt + 1}次): {endpoint}")
                     time.sleep(2 ** attempt)  # 指数退避
                 
-                response = self.session.get(url, params=params, timeout=30)
+                # Cloud Studio环境SSL适配
+                if self.is_cloud_studio:
+                    # 禁用SSL验证以解决Cloud Studio SSL问题
+                    response = self.session.get(url, params=params, timeout=30, verify=False)
+                else:
+                    response = self.session.get(url, params=params, timeout=30)
                 self.last_request_time = time.time()
                 
                 response.raise_for_status()
