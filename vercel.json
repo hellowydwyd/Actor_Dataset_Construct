@@ -4,36 +4,13 @@
     {
       "src": "api/index.py",
       "use": "@vercel/python"
-    },
-    {
-      "src": "web/static/**",
-      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
-      "src": "/static/(.*)",
-      "dest": "/web/static/$1"
-    },
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/index.py"
-    },
-    {
       "src": "/(.*)",
-      "dest": "/web/static/index.html"
+      "dest": "/api/index.py"
     }
-  ],
-  "env": {
-    "PYTHON_VERSION": "3.9",
-    "VERCEL_ENV": "true",
-    "TMDB_API_KEY": "@tmdb_api_key"
-  },
-  "functions": {
-    "api/index.py": {
-      "maxDuration": 30,
-      "memory": 1024
-    }
-  }
+  ]
 }
 

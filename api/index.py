@@ -15,25 +15,29 @@ sys.path.insert(0, str(project_root))
 os.environ['VERCEL_ENV'] = 'true'
 os.environ['CLOUDSTUDIO_ENV'] = 'false'
 
-# 导入Flask应用
-from web.app import create_app
-
-# 创建应用实例
-app = create_app()
-
-# Vercel需要的处理函数
-def handler(request):
-    """Vercel请求处理函数"""
-    return app(request.environ, start_response)
-
-def start_response(status, headers):
-    """WSGI start_response函数"""
-    pass
-
-# 如果作为模块导入，返回app实例
-if __name__ != '__main__':
-    # Vercel会导入这个模块并使用app实例
+try:
+    # 导入Flask应用
+    from web.app import create_app
+    
+    # 创建应用实例
+    app = create_app()
+    
+    # Vercel Serverless Functions入口点
+    def handler(request, response):
+        """Vercel请求处理函数"""
+        return app
+    
+    # 直接导出app供Vercel使用
     application = app
-else:
-    # 本地测试时可以直接运行
-    app.run(debug=True)
+    
+except Exception as e:
+    print(f"Error creating app: {e}")
+    # 创建一个简单的fallback应用
+    from flask import Flask
+    app = Flask(__name__)
+    
+    @app.route('/')
+    def hello():
+        return 'Hello from Vercel!'
+    
+    application = app
