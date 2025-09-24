@@ -52,7 +52,7 @@ def create_app():
         image_crawler = ImageCrawler()
         face_processor = FaceProcessor()
         vector_db = VectorDatabaseManager()
-        video_recognizer = VideoFaceRecognizer()
+        video_recognizer = VideoFaceRecognizer(long_video_mode=True)  # 默认启用长视频模式
         logger.info("Web应用组件初始化成功")
     except Exception as e:
         logger.error(f"Web应用组件初始化失败: {e}")
@@ -770,7 +770,25 @@ def create_app():
             if metadata_dir.exists():
                 try:
                     for meta_file in metadata_dir.glob('*.json'):
-                        if meta_file.name != 'color_config.json':  # 保留颜色配置
+                        if meta_file.name == 'color_config.json':
+                            # 重置颜色配置文件而不是删除
+                            empty_color_config = {
+                                "version": "1.0",
+                                "created_at": "",
+                                "movies": {},
+                                "global_settings": {
+                                    "default_shape": "rectangle",
+                                    "line_thickness": 2,
+                                    "font_scale": 0.6,
+                                    "font_thickness": 2
+                                }
+                            }
+                            with open(meta_file, 'w', encoding='utf-8') as f:
+                                import json
+                                json.dump(empty_color_config, f, ensure_ascii=False, indent=2)
+                            logger.info(f"重置颜色配置文件: {meta_file.name}")
+                        else:
+                            # 删除其他元数据文件
                             meta_file.unlink()
                             logger.info(f"删除元数据文件: {meta_file.name}")
                 except Exception as e:
@@ -1108,6 +1126,11 @@ def create_app():
             movie_title = request.form.get('movie_title', '').strip()
             similarity_threshold = float(request.form.get('similarity_threshold', 0.6))
             
+            # 获取长视频处理参数
+            processing_mode = request.form.get('processing_mode', 'auto')  # auto, standard, long_video, parallel
+            max_workers = int(request.form.get('max_workers', 2))
+            max_memory_usage = float(request.form.get('max_memory_usage', 0.8))
+            
             # 检查文件类型
             file_ext = Path(file.filename).suffix.lower()
             if file_ext not in ['.mp4', '.avi', '.mov', '.mkv', '.flv', '.wmv']:
@@ -1130,40 +1153,121 @@ def create_app():
             progress_queues[task_id] = progress_queue
             
             # 定义进度回调函数
-            def progress_callback(progress, current_frame, total_frames):
+            def progress_callback(progress_info):
+                """
+                处理视频处理进度回调
+                
+                Args:
+                    progress_info: 包含详细进度信息的字典
+                """
+                # 构建详细的进度消息
+                progress = progress_info.get('progress', 0)
+                current_frame = progress_info.get('current_frame', 0)
+                total_frames = progress_info.get('total_frames', 0)
+                processed_frames = progress_info.get('processed_frames', 0)
+                faces_detected = progress_info.get('faces_detected', 0)
+                faces_recognized = progress_info.get('faces_recognized', 0)
+                actors_found = progress_info.get('actors_found', 0)
+                elapsed_time = progress_info.get('elapsed_time', 0)
+                eta = progress_info.get('eta', 0)
+                memory_usage = progress_info.get('memory_usage', 0)
+                
+                # 格式化时间
+                elapsed_str = f"{int(elapsed_time // 60)}:{int(elapsed_time % 60):02d}"
+                eta_str = f"{int(eta // 60)}:{int(eta % 60):02d}" if eta > 0 else "未知"
+                
+                # 构建详细消息
+                message = (f"处理进度: {progress:.1f}% ({current_frame}/{total_frames}) | "
+                          f"已处理: {processed_frames} 帧 | "
+                          f"检测人脸: {faces_detected} | 识别: {faces_recognized} | "
+                          f"发现演员: {actors_found} 位 | "
+                          f"用时: {elapsed_str} | 剩余: {eta_str} | "
+                          f"内存: {memory_usage:.1%}")
+                
                 progress_data = {
                     'type': 'progress',
                     'progress': progress,
                     'current_frame': current_frame,
                     'total_frames': total_frames,
-                    'message': f'处理进度: {progress:.1f}% ({current_frame}/{total_frames})'
+                    'processed_frames': processed_frames,
+                    'faces_detected': faces_detected,
+                    'faces_recognized': faces_recognized,
+                    'actors_found': actors_found,
+                    'elapsed_time': elapsed_time,
+                    'eta': eta,
+                    'memory_usage': memory_usage,
+                    'message': message
                 }
+                
                 try:
                     progress_queue.put(progress_data, block=False)
                 except queue.Full:
                     pass  # 如果队列满了就跳过
             
+            # 检测视频时长并确定处理模式
+            def get_video_duration_minutes(video_path):
+                import cv2
+                try:
+                    cap = cv2.VideoCapture(str(video_path))
+                    if not cap.isOpened():
+                        return 0
+                    fps = cap.get(cv2.CAP_PROP_FPS)
+                    total_frames = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+                    cap.release()
+                    return total_frames / fps / 60 if fps > 0 else 0
+                except:
+                    return 0
+            
+            # 确定处理模式
+            video_duration = get_video_duration_minutes(input_path)
+            if processing_mode == 'auto':
+                if video_duration <= 30:
+                    final_mode = 'standard'
+                elif video_duration <= 120:
+                    final_mode = 'long_video'
+                else:
+                    final_mode = 'parallel'
+            else:
+                final_mode = processing_mode
+            
+            logger.info(f"视频时长: {video_duration:.1f}分钟，处理模式: {final_mode}")
+            
             # 定义视频处理函数
             def process_video_async():
                 try:
-                    # 创建电影范围识别器（如果指定了电影）
+                    # 创建识别器
+                    long_video_mode = final_mode in ['long_video', 'parallel']
+                    current_recognizer = VideoFaceRecognizer(
+                        similarity_threshold=similarity_threshold,
+                        movie_title=movie_title if movie_title else None,
+                        long_video_mode=long_video_mode,
+                        max_memory_usage=max_memory_usage
+                    )
+                    
                     if movie_title:
-                        current_recognizer = VideoFaceRecognizer(
-                            similarity_threshold=similarity_threshold,
-                            movie_title=movie_title
-                        )
                         logger.info(f"使用电影范围视频处理: {movie_title}")
                     else:
-                        current_recognizer = VideoFaceRecognizer(similarity_threshold=similarity_threshold)
                         logger.info("使用全库视频处理")
                     
-                    # 处理视频
-                    results = current_recognizer.process_video_file(
-                        video_path=str(input_path),
-                        output_path=str(output_path),
-                        frame_skip=1,  # 处理每一帧
-                        progress_callback=progress_callback
-                    )
+                    logger.info(f"处理配置: 模式={final_mode}, 长视频模式={'启用' if long_video_mode else '禁用'}, "
+                              f"最大内存使用率={max_memory_usage:.1%}")
+                    
+                    # 根据模式选择处理方法
+                    if final_mode == 'parallel':
+                        results = current_recognizer.process_video_with_parallel_frames(
+                            video_path=str(input_path),
+                            output_path=str(output_path),
+                            max_workers=max_workers,
+                            progress_callback=progress_callback
+                        )
+                    else:
+                        results = current_recognizer.process_video_file(
+                            video_path=str(input_path),
+                            output_path=str(output_path),
+                            frame_skip=1,
+                            progress_callback=progress_callback,
+                            resume_from_checkpoint=True
+                        )
                     
                     # 发送完成信号
                     complete_data = {

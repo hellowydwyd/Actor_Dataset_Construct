@@ -217,27 +217,107 @@ class TMDBClient:
         logger.info(f"获取到 {len(actors)} 位主要演员")
         return actors
     
-    def get_actor_images_from_tmdb(self, person_id: int, max_images: int = 5) -> List[str]:
+    def get_actor_images_from_tmdb(self, person_id: int, max_images: int = 5, 
+                                 min_resolution: int = 500) -> List[str]:
         """
-        从TMDB获取演员图片URL列表
+        从TMDB获取演员图片URL列表（增强版）
         
         Args:
             person_id: 演员ID
             max_images: 最多返回的图片数量
+            min_resolution: 最小分辨率要求
             
         Returns:
             图片URL列表
         """
-        images_data = self.get_person_images(person_id)
-        profiles = images_data.get('profiles', [])
+        try:
+            images_data = self.get_person_images(person_id)
+            profiles = images_data.get('profiles', [])
+            
+            if not profiles:
+                logger.info(f"演员 {person_id} 没有个人照片")
+                return []
+            
+            # 过滤高质量图片
+            quality_profiles = []
+            for profile in profiles:
+                width = profile.get('width', 0)
+                height = profile.get('height', 0)
+                vote_avg = profile.get('vote_average', 0)
+                
+                # 质量筛选条件
+                if (width >= min_resolution and height >= min_resolution and
+                    width * height >= min_resolution * min_resolution):
+                    quality_profiles.append({
+                        **profile,
+                        'quality_score': vote_avg * 10 + (width * height) / 10000  # 综合评分
+                    })
+            
+            # 按质量评分排序
+            quality_profiles.sort(key=lambda x: x.get('quality_score', 0), reverse=True)
+            
+            # 生成不同尺寸的图片URL
+            image_urls = []
+            for profile in quality_profiles[:max_images]:
+                # 优先使用高分辨率，如果太大则使用中等分辨率
+                width = profile.get('width', 0)
+                height = profile.get('height', 0)
+                
+                if width > 1500 and height > 1500:
+                    size = 'w780'  # 高分辨率图片使用中等尺寸
+                elif width > 1000 and height > 1000:
+                    size = 'w500'  # 中等分辨率图片
+                else:
+                    size = 'original'  # 小图片使用原始尺寸
+                
+                image_url = self.get_full_image_url(profile['file_path'], size)
+                image_urls.append(image_url)
+                
+                logger.debug(f"TMDB图片: {width}x{height}, 评分: {profile.get('vote_average', 0):.1f}, 使用尺寸: {size}")
+            
+            logger.info(f"从TMDB获取到 {len(image_urls)} 张高质量演员图片")
+            return image_urls
+            
+        except Exception as e:
+            logger.error(f"获取TMDB演员图片失败: {e}")
+            return []
+    
+    def get_detailed_person_info(self, person_id: int) -> Dict[str, Any]:
+        """
+        获取演员的详细信息（包括图片统计）
         
-        # 按投票数排序，选择高质量图片
-        profiles.sort(key=lambda x: x.get('vote_average', 0), reverse=True)
-        
-        image_urls = []
-        for profile in profiles[:max_images]:
-            image_url = self.get_full_image_url(profile['file_path'], 'original')
-            image_urls.append(image_url)
-        
-        logger.info(f"从TMDB获取到 {len(image_urls)} 张演员图片")
-        return image_urls
+        Args:
+            person_id: 演员ID
+            
+        Returns:
+            详细的演员信息
+        """
+        try:
+            # 获取基本信息
+            person_details = self.get_person_details(person_id)
+            
+            # 获取图片信息
+            images_data = self.get_person_images(person_id)
+            profiles = images_data.get('profiles', [])
+            
+            # 统计图片信息
+            total_images = len(profiles)
+            high_res_count = sum(1 for p in profiles if p.get('width', 0) >= 1000 and p.get('height', 0) >= 1000)
+            avg_rating = sum(p.get('vote_average', 0) for p in profiles) / total_images if total_images > 0 else 0
+            
+            # 组合详细信息
+            detailed_info = {
+                **person_details,
+                'images_stats': {
+                    'total_profiles': total_images,
+                    'high_resolution_count': high_res_count,
+                    'average_rating': avg_rating,
+                    'has_sufficient_images': total_images >= 3
+                }
+            }
+            
+            return detailed_info
+            
+        except Exception as e:
+            logger.error(f"获取演员详细信息失败: {e}")
+            return {}

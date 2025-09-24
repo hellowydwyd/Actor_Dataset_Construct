@@ -1589,7 +1589,7 @@
                 
                 const videoFrame = document.getElementById('video-frame');
                 if (videoFrame) {
-                    videoFrame.addEventListener('change', previewVideoFrame);
+                    videoFrame.addEventListener('change', checkFileType);
                 }
                 
                 const similarityThreshold = document.getElementById('similarity-threshold');
@@ -3178,19 +3178,13 @@
             document.getElementById('threshold-value').textContent = threshold;
         }
 
-        // 预览视频帧 - 优化版本
-        function previewVideoFrame(event) {
+        // 文件类型检查（不再预览视频帧）
+        function checkFileType(event) {
             const file = event.target.files[0];
             if (!file) {
                 hideVideoPreview();
                 return;
             }
-            
-            const previewDiv = document.getElementById('original-preview');
-            const previewImg = document.getElementById('original-img');
-            
-            // 显示加载状态
-            showVideoPreviewLoading();
             
             // 检查文件类型
             const fileType = file.type;
@@ -3198,98 +3192,54 @@
             const isImage = fileType.startsWith('image/');
             
             if (isVideo) {
-                processVideoPreview(file, previewDiv, previewImg);
+                // 只显示视频文件信息，不预览第一帧
+                showVideoFileInfo(file);
             } else if (isImage) {
-                processImagePreview(file, previewDiv, previewImg);
+                processImagePreview(file);
             } else {
                 hideVideoPreview();
                 showNotification('error', '不支持的文件格式，请上传图片或视频文件');
             }
         }
         
-        // 处理视频预览
-        function processVideoPreview(file, previewDiv, previewImg) {
+        // 显示视频文件信息（不预览第一帧）
+        function showVideoFileInfo(file) {
+            const previewDiv = document.getElementById('original-preview');
+            const previewImg = document.getElementById('original-img');
+            
+            // 隐藏图片预览
+            previewImg.style.display = 'none';
+            
+            // 显示视频文件信息
             const video = document.createElement('video');
-            video.crossOrigin = 'anonymous';
-            video.muted = true;
             video.preload = 'metadata';
+            video.muted = true;
             
             const objectURL = URL.createObjectURL(file);
             video.src = objectURL;
             
-            // 视频加载完成后
             video.addEventListener('loadedmetadata', function() {
-                // 显示视频信息
+                // 只显示视频信息，不显示预览图
                 updateVideoInfo(video, file);
+                showVideoPreviewSuccess(previewDiv, '视频文件已选择');
                 
-                // 设置到第一帧（或者稍微往后一点以避免黑屏）
-                video.currentTime = Math.min(0.1, video.duration * 0.01);
-            });
-            
-            video.addEventListener('seeked', function() {
-                try {
-                    // 创建高质量的canvas截图
-                    const canvas = document.createElement('canvas');
-                    const aspectRatio = video.videoWidth / video.videoHeight;
-                    
-                    // 智能调整预览尺寸
-                    const maxWidth = 800;
-                    const maxHeight = 600;
-                    
-                    let canvasWidth = video.videoWidth;
-                    let canvasHeight = video.videoHeight;
-                    
-                    if (canvasWidth > maxWidth) {
-                        canvasWidth = maxWidth;
-                        canvasHeight = maxWidth / aspectRatio;
-                    }
-                    
-                    if (canvasHeight > maxHeight) {
-                        canvasHeight = maxHeight;
-                        canvasWidth = maxHeight * aspectRatio;
-                    }
-                    
-                    canvas.width = canvasWidth;
-                    canvas.height = canvasHeight;
-                    
-                    const ctx = canvas.getContext('2d');
-                    ctx.imageSmoothingEnabled = true;
-                    ctx.imageSmoothingQuality = 'high';
-                    ctx.drawImage(video, 0, 0, canvasWidth, canvasHeight);
-                    
-                    // 使用高质量JPEG编码
-                    const dataURL = canvas.toDataURL('image/jpeg', 0.9);
-                    previewImg.src = dataURL;
-                    
-                    // 添加预览增强效果
-                    showVideoPreviewSuccess(previewDiv, '视频第一帧预览');
-                    
-                    // 释放资源
-                    URL.revokeObjectURL(objectURL);
-                    
-                } catch (error) {
-                    console.error('视频预览失败:', error);
-                    showVideoPreviewError('视频预览失败');
-                }
-            });
-            
-            video.addEventListener('error', function(e) {
-                console.error('视频加载失败:', e);
-                showVideoPreviewError('视频加载失败，请检查文件格式');
+                // 释放资源
                 URL.revokeObjectURL(objectURL);
             });
             
-            // 设置加载超时
-            setTimeout(() => {
-                if (!previewImg.src || previewImg.src === window.location.href) {
-                    showVideoPreviewError('视频加载超时');
-                    URL.revokeObjectURL(objectURL);
-                }
-            }, 10000);
+            video.addEventListener('error', function() {
+                showVideoPreviewError('视频文件信息读取失败');
+                URL.revokeObjectURL(objectURL);
+            });
         }
         
         // 处理图片预览
-        function processImagePreview(file, previewDiv, previewImg) {
+        function processImagePreview(file) {
+            const previewDiv = document.getElementById('original-preview');
+            const previewImg = document.getElementById('original-img');
+            
+            // 显示图片预览
+            previewImg.style.display = 'block';
             const reader = new FileReader();
             
             reader.onload = function(e) {

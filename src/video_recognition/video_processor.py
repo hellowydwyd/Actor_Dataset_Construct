@@ -7,6 +7,12 @@ import numpy as np
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Tuple
 import time
+import threading
+import queue
+import gc
+import psutil
+import json
+from concurrent.futures import ThreadPoolExecutor
 
 from ..face_recognition.face_processor import FaceProcessor
 from ..database.vector_database import VectorDatabaseManager
@@ -19,21 +25,43 @@ logger = get_logger(__name__)
 class VideoFaceRecognizer:
     """视频人脸识别器"""
     
-    def __init__(self, similarity_threshold: float = 0.6, movie_title: str = None):
+    def __init__(self, similarity_threshold: float = 0.6, movie_title: str = None,
+                 long_video_mode: bool = False, max_memory_usage: float = 0.8):
         """
         初始化视频人脸识别器
         
         Args:
             similarity_threshold: 人脸相似度阈值
             movie_title: 目标电影名称，如果指定则只在该电影演员范围内识别
+            long_video_mode: 是否启用长视频模式（内存优化）
+            max_memory_usage: 最大内存使用率（0.0-1.0）
         """
         self.similarity_threshold = similarity_threshold
         self.movie_title = movie_title
+        self.long_video_mode = long_video_mode
+        self.max_memory_usage = max_memory_usage
+        
+        # 长视频处理相关配置
+        self.chunk_size = 300 if long_video_mode else 1000  # 分块处理的帧数
+        self.smart_skip_enabled = long_video_mode
+        self.memory_check_interval = 100  # 每处理100帧检查一次内存
+        self.last_memory_check = 0
+        
+        # 进度和状态管理
+        self.processing_progress = 0.0
+        self.is_processing = False
+        self.should_stop = False
+        self.checkpoint_file = None
         
         # 初始化组件
         logger.info("初始化视频人脸识别器...")
+        logger.info(f"长视频模式: {'启用' if long_video_mode else '禁用'}")
         self.face_processor = FaceProcessor()
         self.vector_db = VectorDatabaseManager()
+        
+        # 初始化中文文字渲染器
+        from ..utils.chinese_text_renderer import ChineseTextRenderer
+        self.text_renderer = ChineseTextRenderer()
         
         # 检查数据库是否有数据
         stats = self.vector_db.get_database_stats()
@@ -80,6 +108,95 @@ class VideoFaceRecognizer:
         except Exception as e:
             logger.error(f"获取电影演员信息失败: {e}")
             return {}
+    
+    def _check_memory_usage(self) -> float:
+        """检查当前内存使用率"""
+        try:
+            memory_info = psutil.virtual_memory()
+            usage_percent = memory_info.percent / 100.0
+            return usage_percent
+        except Exception as e:
+            logger.warning(f"无法获取内存信息: {e}")
+            return 0.5  # 返回保守值
+    
+    def _should_gc_collect(self, force: bool = False) -> bool:
+        """判断是否应该进行垃圾回收"""
+        if force:
+            return True
+        
+        memory_usage = self._check_memory_usage()
+        if memory_usage > self.max_memory_usage:
+            logger.info(f"内存使用率过高 ({memory_usage:.1%})，触发垃圾回收")
+            return True
+        
+        return False
+    
+    def _calculate_smart_skip(self, fps: float, total_frames: int, current_frame: int) -> int:
+        """计算智能跳帧策略"""
+        if not self.smart_skip_enabled:
+            return 1
+        
+        # 基础跳帧策略：根据视频长度动态调整
+        duration_minutes = total_frames / fps / 60
+        
+        if duration_minutes <= 30:  # 30分钟以内，每帧处理
+            return 1
+        elif duration_minutes <= 90:  # 30-90分钟，每2帧处理1帧
+            return 2
+        elif duration_minutes <= 180:  # 90-180分钟，每3帧处理1帧
+            return 3
+        else:  # 超过3小时，每5帧处理1帧
+            return 5
+    
+    def _save_checkpoint(self, video_path: str, current_frame: int, stats: dict) -> None:
+        """保存处理进度检查点"""
+        if not self.checkpoint_file:
+            checkpoint_dir = Path(video_path).parent / 'checkpoints'
+            checkpoint_dir.mkdir(exist_ok=True)
+            video_name = Path(video_path).stem
+            self.checkpoint_file = checkpoint_dir / f"{video_name}_checkpoint.json"
+        
+        checkpoint_data = {
+            'video_path': video_path,
+            'current_frame': current_frame,
+            'stats': stats,
+            'timestamp': time.time(),
+            'movie_title': self.movie_title,
+            'similarity_threshold': self.similarity_threshold
+        }
+        
+        try:
+            with open(self.checkpoint_file, 'w', encoding='utf-8') as f:
+                json.dump(checkpoint_data, f, ensure_ascii=False, indent=2)
+            logger.debug(f"检查点已保存: 第{current_frame}帧")
+        except Exception as e:
+            logger.warning(f"保存检查点失败: {e}")
+    
+    def _load_checkpoint(self, video_path: str) -> Optional[dict]:
+        """加载处理进度检查点"""
+        checkpoint_dir = Path(video_path).parent / 'checkpoints'
+        video_name = Path(video_path).stem
+        checkpoint_file = checkpoint_dir / f"{video_name}_checkpoint.json"
+        
+        if not checkpoint_file.exists():
+            return None
+        
+        try:
+            with open(checkpoint_file, 'r', encoding='utf-8') as f:
+                checkpoint_data = json.load(f)
+            
+            # 验证检查点是否匹配当前配置
+            if (checkpoint_data.get('movie_title') == self.movie_title and
+                checkpoint_data.get('similarity_threshold') == self.similarity_threshold):
+                logger.info(f"找到有效检查点，将从第{checkpoint_data['current_frame']}帧继续")
+                return checkpoint_data
+            else:
+                logger.info("检查点配置不匹配，将重新开始处理")
+                return None
+                
+        except Exception as e:
+            logger.warning(f"加载检查点失败: {e}")
+            return None
     
     def _is_main_actor(self, actor_name: str) -> bool:
         """
@@ -235,7 +352,8 @@ class VideoFaceRecognizer:
                             'confidence': self._get_confidence_level(similarity),
                             'movie_source': metadata.get('movie_title', 'Unknown'),
                             'movie_scoped': self.movie_title is not None,
-                            'target_movie': self.movie_title
+                            'target_movie': self.movie_title,
+                            'metadata': metadata  # 包含完整的元数据信息，包括角色名字
                         })
                     
                     recognized_faces.append(recognition_result)
@@ -302,36 +420,41 @@ class VideoFaceRecognizer:
                 self._draw_face_shape(annotated_frame, (x1, y1, x2, y2), color, 
                                     shape_type, line_thickness)
                 
-                # 准备标签文本
+                # 准备标签文本 - 优先使用角色名字
+                metadata = result.get('metadata', {})
+                character_name = metadata.get('character', '')
                 actor_name = result['actor_name']
                 similarity = result['similarity']
-                label = f"{actor_name} ({similarity:.2f})"
                 
-                # 使用中文文字渲染器绘制标签
-                annotated_frame = draw_chinese_text(
+                # 优先显示角色名字，如果没有则显示演员名字
+                display_name = character_name if character_name else actor_name
+                label = f"{display_name} ({similarity:.2f})"
+                
+                # 使用中文文字渲染器绘制标签 - 使用描边而不是纯色背景
+                annotated_frame = self.text_renderer.draw_text_with_outline(
                     annotated_frame, 
                     label, 
                     (x1 + 5, y1 - 5),
                     font_size=18,
-                    color=(255, 255, 255),  # 白色文字
-                    background_color=color,  # 使用人物配色作为背景
-                    background_padding=8
+                    text_color=color,  # 使用人物配色作为文字颜色
+                    outline_color=(0, 0, 0),  # 黑色描边
+                    outline_width=2
                 )
             else:
                 # 未识别的人脸 - 灰色框
                 color = (128, 128, 128)
                 cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), color, 2)
                 
-                # 标记为未知
+                # 标记为未知 - 使用描边而不是纯色背景
                 label = "未知"
-                annotated_frame = draw_chinese_text(
+                annotated_frame = self.text_renderer.draw_text_with_outline(
                     annotated_frame, 
                     label, 
                     (x1 + 5, y1 - 5),
                     font_size=18,
-                    color=(255, 255, 255),  # 白色文字
-                    background_color=color,  # 灰色背景
-                    background_padding=8
+                    text_color=(255, 255, 255),  # 白色文字
+                    outline_color=(0, 0, 0),  # 黑色描边
+                    outline_width=2
                 )
         
         return annotated_frame
@@ -419,7 +542,8 @@ class VideoFaceRecognizer:
         cv2.ellipse(frame, (x1 + radius, y2 - radius), (radius, radius), 90, 0, 90, color, thickness)
     
     def process_video_file(self, video_path: str, output_path: str = None, 
-                          frame_skip: int = 1, progress_callback=None) -> Dict[str, Any]:
+                          frame_skip: int = 1, progress_callback=None, 
+                          resume_from_checkpoint: bool = True) -> Dict[str, Any]:
         """
         处理视频文件，识别并标注人脸
         
@@ -427,11 +551,21 @@ class VideoFaceRecognizer:
             video_path: 输入视频路径
             output_path: 输出视频路径（可选）
             frame_skip: 跳帧数量（1=处理每帧，2=每2帧处理1帧）
+            progress_callback: 进度回调函数
+            resume_from_checkpoint: 是否从检查点恢复
             
         Returns:
             处理结果统计
         """
         try:
+            self.is_processing = True
+            self.should_stop = False
+            
+            # 尝试加载检查点
+            checkpoint_data = None
+            if resume_from_checkpoint:
+                checkpoint_data = self._load_checkpoint(video_path)
+            
             # 打开视频文件
             cap = cv2.VideoCapture(video_path)
             
@@ -439,12 +573,23 @@ class VideoFaceRecognizer:
                 raise ValueError(f"无法打开视频文件: {video_path}")
             
             # 获取视频信息
-            fps = int(cap.get(cv2.CAP_PROP_FPS))
+            fps = float(cap.get(cv2.CAP_PROP_FPS))
             width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
             height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
             total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+            duration_minutes = total_frames / fps / 60
             
-            logger.info(f"视频信息: {width}x{height}, {fps}fps, {total_frames}帧")
+            logger.info(f"视频信息: {width}x{height}, {fps:.1f}fps, {total_frames}帧, 时长: {duration_minutes:.1f}分钟")
+            
+            # 检查是否为长视频，自动启用优化
+            if duration_minutes > 60 and not self.long_video_mode:
+                logger.info(f"检测到长视频({duration_minutes:.1f}分钟)，建议启用长视频模式以获得更好的性能")
+            
+            # 计算智能跳帧策略
+            smart_skip = self._calculate_smart_skip(fps, total_frames, 0)
+            effective_skip = max(frame_skip, smart_skip)
+            if effective_skip > frame_skip:
+                logger.info(f"智能跳帧: {frame_skip} -> {effective_skip} (视频时长: {duration_minutes:.1f}分钟)")
             
             # 准备输出视频
             writer = None
@@ -453,21 +598,34 @@ class VideoFaceRecognizer:
                 writer = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
             
             # 处理统计
-            stats = {
-                'total_frames': total_frames,
-                'processed_frames': 0,
-                'faces_detected': 0,
-                'faces_recognized': 0,
-                'actors_found': set(),
-                'processing_time': 0
-            }
+            if checkpoint_data:
+                stats = checkpoint_data['stats']
+                start_frame = checkpoint_data['current_frame']
+                logger.info(f"从检查点恢复，起始帧: {start_frame}")
+            else:
+                stats = {
+                    'total_frames': total_frames,
+                    'processed_frames': 0,
+                    'faces_detected': 0,
+                    'faces_recognized': 0,
+                    'actors_found': set(),
+                    'processing_time': 0,
+                    'memory_warnings': 0,
+                    'gc_collections': 0,
+                    'effective_skip_rate': effective_skip
+                }
+                start_frame = 0
             
-            frame_count = 0
+            # 如果从检查点恢复，跳转到指定帧
+            if start_frame > 0:
+                cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
+            
+            frame_count = start_frame
             start_time = time.time()
             
             logger.info("开始处理视频...")
             
-            while True:
+            while not self.should_stop:
                 ret, frame = cap.read()
                 if not ret:
                     break
@@ -475,10 +633,20 @@ class VideoFaceRecognizer:
                 frame_count += 1
                 
                 # 跳帧处理
-                if frame_count % frame_skip != 0:
+                if frame_count % effective_skip != 0:
                     if writer:
                         writer.write(frame)
                     continue
+                
+                # 内存管理
+                if frame_count % self.memory_check_interval == 0:
+                    if self._should_gc_collect():
+                        gc.collect()
+                        stats['gc_collections'] += 1
+                        memory_usage = self._check_memory_usage()
+                        if memory_usage > 0.9:  # 警告阈值
+                            stats['memory_warnings'] += 1
+                            logger.warning(f"内存使用率过高: {memory_usage:.1%}")
                 
                 # 识别人脸
                 recognition_results = self.recognize_faces_in_frame(frame)
@@ -500,23 +668,64 @@ class VideoFaceRecognizer:
                 if writer:
                     writer.write(frame)
                 
-                # 显示处理进度
-                if frame_count % max(1, fps) == 0:  # 每秒显示一次进度
+                # 更频繁的进度回调和检查点保存
+                should_update_progress = (
+                    frame_count % max(1, int(fps * 5)) == 0 or  # 每5秒更新一次进度
+                    frame_count % 100 == 0  # 或者每100帧更新一次
+                )
+                
+                if should_update_progress:
                     progress = frame_count / total_frames * 100
-                    logger.info(f"处理进度: {progress:.1f}% ({frame_count}/{total_frames})")
+                    elapsed_time = time.time() - start_time
+                    eta = (elapsed_time / (frame_count - start_frame + 1)) * (total_frames - frame_count)
                     
                     # 调用进度回调函数
                     if progress_callback:
-                        progress_callback(progress, frame_count, total_frames)
+                        progress_info = {
+                            'progress': progress,
+                            'current_frame': frame_count,
+                            'total_frames': total_frames,
+                            'processed_frames': stats['processed_frames'],
+                            'faces_detected': stats['faces_detected'],
+                            'faces_recognized': stats['faces_recognized'],
+                            'actors_found': len(stats['actors_found']),
+                            'elapsed_time': elapsed_time,
+                            'eta': eta,
+                            'fps': fps,
+                            'memory_usage': self._check_memory_usage()
+                        }
+                        progress_callback(progress_info)
+                    
+                    # 每30秒显示详细日志
+                    if frame_count % max(1, int(fps * 30)) == 0:
+                        logger.info(f"处理进度: {progress:.1f}% ({frame_count}/{total_frames}) "
+                                  f"用时: {elapsed_time:.0f}s 预计剩余: {eta:.0f}s")
+                        
+                        # 保存检查点
+                        if self.long_video_mode:
+                            self._save_checkpoint(video_path, frame_count, stats)
             
             # 清理资源
             cap.release()
             if writer:
                 writer.release()
             
+            # 强制垃圾回收
+            if self._should_gc_collect(force=True):
+                gc.collect()
+                stats['gc_collections'] += 1
+            
             # 完成统计
             stats['processing_time'] = time.time() - start_time
             stats['actors_found'] = list(stats['actors_found'])
+            
+            # 删除检查点文件
+            if self.checkpoint_file and self.checkpoint_file.exists():
+                try:
+                    self.checkpoint_file.unlink()
+                    logger.info("检查点文件已清理")
+                except Exception as e:
+                    logger.warning(f"清理检查点文件失败: {e}")
             
             logger.info(f"视频处理完成: {stats}")
             return stats
@@ -524,6 +733,8 @@ class VideoFaceRecognizer:
         except Exception as e:
             logger.error(f"处理视频文件失败: {e}")
             return {'error': str(e)}
+        finally:
+            self.is_processing = False
     
     def process_single_frame(self, frame: np.ndarray) -> Tuple[np.ndarray, List[Dict[str, Any]]]:
         """
@@ -586,3 +797,209 @@ class VideoFaceRecognizer:
         except Exception as e:
             logger.error(f"获取演员信息失败: {e}")
             return []
+    
+    def stop_processing(self) -> None:
+        """停止视频处理"""
+        self.should_stop = True
+        logger.info("已请求停止视频处理")
+    
+    def get_processing_status(self) -> dict:
+        """获取处理状态"""
+        return {
+            'is_processing': self.is_processing,
+            'progress': self.processing_progress,
+            'should_stop': self.should_stop,
+            'long_video_mode': self.long_video_mode,
+            'max_memory_usage': self.max_memory_usage,
+            'current_memory_usage': self._check_memory_usage()
+        }
+    
+    def process_video_with_parallel_frames(self, video_path: str, output_path: str = None,
+                                         max_workers: int = 2, progress_callback=None) -> Dict[str, Any]:
+        """
+        使用并行帧处理的方式处理视频（适用于长视频）
+        
+        Args:
+            video_path: 输入视频路径
+            output_path: 输出视频路径
+            max_workers: 最大并行工作线程数
+            progress_callback: 进度回调函数
+            
+        Returns:
+            处理结果统计
+        """
+        try:
+            self.is_processing = True
+            self.should_stop = False
+            
+            # 打开视频文件
+            cap = cv2.VideoCapture(video_path)
+            if not cap.isOpened():
+                raise ValueError(f"无法打开视频文件: {video_path}")
+            
+            # 获取视频信息
+            fps = float(cap.get(cv2.CAP_PROP_FPS))
+            width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+            height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+            total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+            duration_minutes = total_frames / fps / 60
+            
+            logger.info(f"并行处理模式 - 视频信息: {width}x{height}, {fps:.1f}fps, {total_frames}帧, "
+                       f"时长: {duration_minutes:.1f}分钟")
+            
+            # 计算智能跳帧
+            smart_skip = self._calculate_smart_skip(fps, total_frames, 0)
+            
+            # 准备输出视频
+            writer = None
+            if output_path:
+                fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+                writer = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
+            
+            # 处理统计
+            stats = {
+                'total_frames': total_frames,
+                'processed_frames': 0,
+                'faces_detected': 0,
+                'faces_recognized': 0,
+                'actors_found': set(),
+                'processing_time': 0,
+                'parallel_workers': max_workers,
+                'effective_skip_rate': smart_skip
+            }
+            
+            # 帧队列和结果队列
+            frame_queue = queue.Queue(maxsize=max_workers * 2)
+            result_queue = queue.Queue()
+            
+            def frame_processor():
+                """帧处理工作线程"""
+                while not self.should_stop:
+                    try:
+                        frame_data = frame_queue.get(timeout=1.0)
+                        if frame_data is None:  # 结束信号
+                            break
+                        
+                        frame_index, frame = frame_data
+                        
+                        # 处理帧
+                        recognition_results = self.recognize_faces_in_frame(frame)
+                        annotated_frame = self.draw_face_annotations(frame, recognition_results)
+                        
+                        result_queue.put((frame_index, annotated_frame, recognition_results))
+                        frame_queue.task_done()
+                        
+                    except queue.Empty:
+                        continue
+                    except Exception as e:
+                        logger.error(f"帧处理线程错误: {e}")
+                        break
+            
+            # 启动工作线程
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                # 提交帧处理任务
+                for _ in range(max_workers):
+                    executor.submit(frame_processor)
+                
+                start_time = time.time()
+                frame_count = 0
+                processed_results = {}
+                
+                logger.info("开始并行处理视频...")
+                
+                # 读取和分发帧
+                while not self.should_stop:
+                    ret, frame = cap.read()
+                    if not ret:
+                        break
+                    
+                    frame_count += 1
+                    
+                    # 智能跳帧
+                    if frame_count % smart_skip != 0:
+                        if writer:
+                            writer.write(frame)
+                        continue
+                    
+                    # 将帧加入处理队列
+                    try:
+                        frame_queue.put((frame_count, frame.copy()), timeout=2.0)
+                    except queue.Full:
+                        logger.warning("帧队列已满，跳过当前帧")
+                        continue
+                    
+                    # 处理已完成的结果
+                    while not result_queue.empty():
+                        try:
+                            result_index, annotated_frame, recognition_results = result_queue.get_nowait()
+                            processed_results[result_index] = (annotated_frame, recognition_results)
+                            
+                            # 更新统计
+                            stats['processed_frames'] += 1
+                            stats['faces_detected'] += len(recognition_results)
+                            
+                            for result in recognition_results:
+                                if result['recognized']:
+                                    stats['faces_recognized'] += 1
+                                    stats['actors_found'].add(result['actor_name'])
+                            
+                        except queue.Empty:
+                            break
+                    
+                    # 写入已排序的帧到输出视频
+                    if writer:
+                        for i in sorted(processed_results.keys()):
+                            if i <= frame_count - max_workers:  # 确保顺序
+                                annotated_frame, _ = processed_results.pop(i)
+                                writer.write(annotated_frame)
+                    
+                    # 进度报告
+                    if frame_count % max(1, int(fps * 10)) == 0:  # 每10秒报告一次
+                        progress = frame_count / total_frames * 100
+                        elapsed_time = time.time() - start_time
+                        eta = (elapsed_time / frame_count) * (total_frames - frame_count)
+                        
+                        logger.info(f"并行处理进度: {progress:.1f}% ({frame_count}/{total_frames}) "
+                                  f"用时: {elapsed_time:.0f}s 预计剩余: {eta:.0f}s")
+                        
+                        if progress_callback:
+                            progress_callback(progress, frame_count, total_frames)
+                
+                # 发送结束信号
+                for _ in range(max_workers):
+                    frame_queue.put(None)
+                
+                # 等待所有任务完成
+                frame_queue.join()
+                
+                # 处理剩余结果
+                while not result_queue.empty():
+                    try:
+                        result_index, annotated_frame, recognition_results = result_queue.get_nowait()
+                        processed_results[result_index] = (annotated_frame, recognition_results)
+                    except queue.Empty:
+                        break
+                
+                # 写入剩余帧
+                if writer:
+                    for i in sorted(processed_results.keys()):
+                        annotated_frame, _ = processed_results[i]
+                        writer.write(annotated_frame)
+            
+            # 清理资源
+            cap.release()
+            if writer:
+                writer.release()
+            
+            # 完成统计
+            stats['processing_time'] = time.time() - start_time
+            stats['actors_found'] = list(stats['actors_found'])
+            
+            logger.info(f"并行视频处理完成: {stats}")
+            return stats
+            
+        except Exception as e:
+            logger.error(f"并行处理视频文件失败: {e}")
+            return {'error': str(e)}
+        finally:
+            self.is_processing = False

@@ -21,24 +21,49 @@ tmdb:
 
 # 图片爬取配置
 crawler:
-  max_images_per_actor: 20  # 每个演员最多收集的图片数量
+  max_images_per_actor: 10  # 每个演员最多收集的图片数量（降低避免过多）
+  min_images_per_actor: 3   # 每个演员最少需要的图片数量（保证3张）
   min_face_size: 112        # 最小人脸尺寸
-  image_quality_threshold: 0.7  # 图片质量阈值
+  image_quality_threshold: 0.6  # 图片质量阈值（略微降低以增加成功率）
   download_timeout: 30      # 下载超时时间(秒)
-  concurrent_downloads: 5   # 并发下载数量
+  concurrent_downloads: 3   # 并发下载数量（降低避免被封）
   single_person_only: true  # 只保留单人照片
   max_faces_per_image: 1    # 每张图片最多允许的人脸数
   
-  # 图片来源配置
+  # 图片来源配置 (按优先级和成功率排序)
   sources:
     - name: "tmdb_images"
       enabled: true
-      max_results: 10
-      description: "TMDB官方图片 (免费，高质量)"
+      max_results: 5
+      description: "TMDB官方图片 (高质量，100%成功率)"
+      priority: 1
     - name: "baidu_images"
       enabled: true
-      max_results: 15
-      description: "百度图片搜索 (免费，剧照丰富)"
+      max_results: 8
+      description: "百度图片搜索 (国内主力源，成功率较高)"
+      priority: 2
+    - name: "bing_images"
+      enabled: true
+      max_results: 5
+      description: "Bing图片搜索 (国际源，质量稳定)"
+      priority: 3
+    - name: "sogou_images"
+      enabled: false
+      max_results: 3
+      description: "搜狗图片搜索 (备用源)"
+      priority: 4
+  
+  # 反爬策略配置
+  anti_crawling:
+    max_retries: 3              # 最大重试次数
+    retry_delay_min: 0.5        # 最小重试延迟(秒)
+    retry_delay_max: 2.0        # 最大重试延迟(秒)
+    request_delay_min: 1.0      # 请求间最小延迟(秒)
+    request_delay_max: 2.0      # 请求间最大延迟(秒)
+    blocked_domains:            # 预设被封禁域名
+      - "douyinpic.com"
+      - "bytedance.com"
+      - "tiktok.com"
 
 # InsightFace配置
 face_recognition:
@@ -77,6 +102,38 @@ web:
   host: "0.0.0.0"
   port: 5000
   debug: true
+
+# 视频处理配置
+video_processing:
+  # 长视频处理优化
+  long_video_mode:
+    enabled: true                    # 是否自动启用长视频模式
+    auto_detect_threshold: 60        # 自动检测阈值（分钟）
+    max_memory_usage: 0.8            # 最大内存使用率
+    memory_check_interval: 100       # 内存检查间隔（帧数）
+    chunk_size: 300                  # 分块处理大小（帧数）
+    checkpoint_interval: 1800        # 检查点保存间隔（秒，30分钟）
+  
+  # 智能跳帧策略
+  smart_skip:
+    enabled: true                    # 是否启用智能跳帧
+    strategy: "duration_based"       # 跳帧策略: duration_based, quality_based, adaptive
+    max_skip_rate: 5                 # 最大跳帧率
+    quality_threshold: 0.7           # 质量阈值（质量模式下使用）
+  
+  # 并行处理配置
+  parallel_processing:
+    enabled: true                    # 是否启用并行处理
+    max_workers: 2                   # 最大工作线程数
+    queue_size_multiplier: 2         # 队列大小倍数
+    timeout_seconds: 2.0             # 队列超时时间
+  
+  # 性能优化
+  performance:
+    gc_threshold: 0.8                # 垃圾回收阈值
+    frame_compression_enabled: true   # 是否启用帧压缩
+    max_frame_size: 1920             # 最大帧尺寸
+    batch_processing_size: 10         # 批处理大小
 
 # 日志配置
 logging:

@@ -1,7 +1,0 @@
-# TMDB API配置
-TMDB_API_KEY=486ceb284a5bba2fb9dff62fb2d2c819
-
-# Google API配置（可选）
-# 获取方法请参考 GOOGLE_API_SETUP.md
-# GOOGLE_API_KEY=your_google_api_key_here
-# GOOGLE_CX=your_custom_search_engine_id_here

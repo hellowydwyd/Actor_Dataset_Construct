@@ -36,6 +36,9 @@ pyyaml==6.0.1
 # 日志和调试
 loguru==0.7.2
 
+# 系统监控和性能优化
+psutil==5.9.8
+
 # 其他工具包
 pandas==2.2.2
 matplotlib==3.8.4

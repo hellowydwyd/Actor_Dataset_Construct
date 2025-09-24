@@ -2,1287 +2,6 @@
   "version": "1.0",
   "created_at": "",
   "movies": {
-    "肖申克的救赎": {
-      "characters": {
-        "Andy Dufresne": {
-          "character_name": "Andy Dufresne",
-          "color_bgr": [
-            255,
-            215,
-            0
-          ],
-          "color_rgb": [
-            0,
-            215,
-            255
-          ],
-          "color_hex": "#00d7ff",
-          "color_index": 13,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 0
-        },
-        "Ellis Boyd 'Red' Redding": {
-          "character_name": "Ellis Boyd 'Red' Redding",
-          "color_bgr": [
-            255,
-            140,
-            0
-          ],
-          "color_rgb": [
-            0,
-            140,
-            255
-          ],
-          "color_hex": "#008cff",
-          "color_index": 18,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 1
-        },
-        "Warden Norton": {
-          "character_name": "Warden Norton",
-          "color_bgr": [
-            255,
-            69,
-            0
-          ],
-          "color_rgb": [
-            0,
-            69,
-            255
-          ],
-          "color_hex": "#0045ff",
-          "color_index": 11,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 2
-        },
-        "Heywood": {
-          "character_name": "Heywood",
-          "color_bgr": [
-            128,
-            0,
-            128
-          ],
-          "color_rgb": [
-            128,
-            0,
-            128
-          ],
-          "color_hex": "#800080",
-          "color_index": 6,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 3
-        },
-        "Captain Byron T. Hadley": {
-          "character_name": "Captain Byron T. Hadley",
-          "color_bgr": [
-            138,
-            43,
-            226
-          ],
-          "color_rgb": [
-            226,
-            43,
-            138
-          ],
-          "color_hex": "#e22b8a",
-          "color_index": 12,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 4
-        },
-        "Tommy": {
-          "character_name": "Tommy",
-          "color_bgr": [
-            0,
-            255,
-            255
-          ],
-          "color_rgb": [
-            255,
-            255,
-            0
-          ],
-          "color_hex": "#ffff00",
-          "color_index": 5,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 5
-        },
-        "Brooks Hatlen": {
-          "character_name": "Brooks Hatlen",
-          "color_bgr": [
-            255,
-            20,
-            147
-          ],
-          "color_rgb": [
-            147,
-            20,
-            255
-          ],
-          "color_hex": "#9314ff",
-          "color_index": 9,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 6
-        },
-        "Bogs Diamond": {
-          "character_name": "Bogs Diamond",
-          "color_bgr": [
-            0,
-            165,
-            255
-          ],
-          "color_rgb": [
-            255,
-            165,
-            0
-          ],
-          "color_hex": "#ffa500",
-          "color_index": 2,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 7
-        },
-        "1946 D.A.": {
-          "character_name": "1946 D.A.",
-          "color_bgr": [
-            124,
-            252,
-            0
-          ],
-          "color_rgb": [
-            0,
-            252,
-            124
-          ],
-          "color_hex": "#00fc7c",
-          "color_index": 17,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 8
-        },
-        "Skeet": {
-          "character_name": "Skeet",
-          "color_bgr": [
-            0,
-            191,
-            255
-          ],
-          "color_rgb": [
-            255,
-            191,
-            0
-          ],
-          "color_hex": "#ffbf00",
-          "color_index": 15,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 9
-        },
-        "Jigger": {
-          "character_name": "Jigger",
-          "color_bgr": [
-            255,
-            0,
-            0
-          ],
-          "color_rgb": [
-            0,
-            0,
-            255
-          ],
-          "color_hex": "#0000ff",
-          "color_index": 1,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 10
-        },
-        "Floyd": {
-          "character_name": "Floyd",
-          "color_bgr": [
-            0,
-            128,
-            255
-          ],
-          "color_rgb": [
-            255,
-            128,
-            0
-          ],
-          "color_hex": "#ff8000",
-          "color_index": 8,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 11
-        },
-        "Snooze": {
-          "character_name": "Snooze",
-          "color_bgr": [
-            50,
-            205,
-            50
-          ],
-          "color_rgb": [
-            50,
-            205,
-            50
-          ],
-          "color_hex": "#32cd32",
-          "color_index": 10,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 12
-        },
-        "Ernie": {
-          "character_name": "Ernie",
-          "color_bgr": [
-            255,
-            0,
-            255
-          ],
-          "color_rgb": [
-            255,
-            0,
-            255
-          ],
-          "color_hex": "#ff00ff",
-          "color_index": 4,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 13
-        },
-        "Guard Mert": {
-          "character_name": "Guard Mert",
-          "color_bgr": [
-            220,
-            20,
-            60
-          ],
-          "color_rgb": [
-            60,
-            20,
-            220
-          ],
-          "color_hex": "#3c14dc",
-          "color_index": 14,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 14
-        },
-        "Guard Trout": {
-          "character_name": "Guard Trout",
-          "color_bgr": [
-            0,
-            255,
-            0
-          ],
-          "color_rgb": [
-            0,
-            255,
-            0
-          ],
-          "color_hex": "#00ff00",
-          "color_index": 0,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 15
-        },
-        "Andy Dufresne's Wife": {
-          "character_name": "Andy Dufresne's Wife",
-          "color_bgr": [
-            255,
-            105,
-            180
-          ],
-          "color_rgb": [
-            180,
-            105,
-            255
-          ],
-          "color_hex": "#b469ff",
-          "color_index": 16,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 16
-        },
-        "Glenn Quentin": {
-          "character_name": "Glenn Quentin",
-          "color_bgr": [
-            72,
-            61,
-            139
-          ],
-          "color_rgb": [
-            139,
-            61,
-            72
-          ],
-          "color_hex": "#8b3d48",
-          "color_index": 19,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 17
-        },
-        "1946 Judge": {
-          "character_name": "1946 Judge",
-          "color_bgr": [
-            255,
-            255,
-            0
-          ],
-          "color_rgb": [
-            0,
-            255,
-            255
-          ],
-          "color_hex": "#00ffff",
-          "color_index": 3,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 18
-        },
-        "1947 Parole Hearings Man": {
-          "character_name": "1947 Parole Hearings Man",
-          "color_bgr": [
-            255,
-            165,
-            0
-          ],
-          "color_rgb": [
-            0,
-            165,
-            255
-          ],
-          "color_hex": "#00a5ff",
-          "color_index": 7,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 19
-        },
-        "Fresh Fish Con": {
-          "character_name": "Fresh Fish Con",
-          "color_bgr": [
-            255,
-            215,
-            0
-          ],
-          "color_rgb": [
-            0,
-            215,
-            255
-          ],
-          "color_hex": "#00d7ff",
-          "color_index": 13,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 20
-        },
-        "Hungry Fish Con": {
-          "character_name": "Hungry Fish Con",
-          "color_bgr": [
-            255,
-            140,
-            0
-          ],
-          "color_rgb": [
-            0,
-            140,
-            255
-          ],
-          "color_hex": "#008cff",
-          "color_index": 18,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 21
-        },
-        "New Fish Guard": {
-          "character_name": "New Fish Guard",
-          "color_bgr": [
-            255,
-            69,
-            0
-          ],
-          "color_rgb": [
-            0,
-            69,
-            255
-          ],
-          "color_hex": "#0045ff",
-          "color_index": 11,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 22
-        },
-        "Fat Ass": {
-          "character_name": "Fat Ass",
-          "color_bgr": [
-            128,
-            0,
-            128
-          ],
-          "color_rgb": [
-            128,
-            0,
-            128
-          ],
-          "color_hex": "#800080",
-          "color_index": 6,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 23
-        },
-        "Tyrell": {
-          "character_name": "Tyrell",
-          "color_bgr": [
-            138,
-            43,
-            226
-          ],
-          "color_rgb": [
-            226,
-            43,
-            138
-          ],
-          "color_hex": "#e22b8a",
-          "color_index": 12,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 24
-        },
-        "Laundry Bob": {
-          "character_name": "Laundry Bob",
-          "color_bgr": [
-            0,
-            255,
-            255
-          ],
-          "color_rgb": [
-            255,
-            255,
-            0
-          ],
-          "color_hex": "#ffff00",
-          "color_index": 5,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 25
-        },
-        "Laundry Truck Driver": {
-          "character_name": "Laundry Truck Driver",
-          "color_bgr": [
-            255,
-            20,
-            147
-          ],
-          "color_rgb": [
-            147,
-            20,
-            255
-          ],
-          "color_hex": "#9314ff",
-          "color_index": 9,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 26
-        },
-        "Laundry Leonard": {
-          "character_name": "Laundry Leonard",
-          "color_bgr": [
-            0,
-            165,
-            255
-          ],
-          "color_rgb": [
-            255,
-            165,
-            0
-          ],
-          "color_hex": "#ffa500",
-          "color_index": 2,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 27
-        },
-        "Rooster": {
-          "character_name": "Rooster",
-          "color_bgr": [
-            124,
-            252,
-            0
-          ],
-          "color_rgb": [
-            0,
-            252,
-            124
-          ],
-          "color_hex": "#00fc7c",
-          "color_index": 17,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 28
-        },
-        "Pete": {
-          "character_name": "Pete",
-          "color_bgr": [
-            0,
-            191,
-            255
-          ],
-          "color_rgb": [
-            255,
-            191,
-            0
-          ],
-          "color_hex": "#ffbf00",
-          "color_index": 15,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 29
-        },
-        "Guard Youngblood": {
-          "character_name": "Guard Youngblood",
-          "color_bgr": [
-            255,
-            0,
-            0
-          ],
-          "color_rgb": [
-            0,
-            0,
-            255
-          ],
-          "color_hex": "#0000ff",
-          "color_index": 1,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 30
-        },
-        "Projectionist": {
-          "character_name": "Projectionist",
-          "color_bgr": [
-            0,
-            128,
-            255
-          ],
-          "color_rgb": [
-            255,
-            128,
-            0
-          ],
-          "color_hex": "#ff8000",
-          "color_index": 8,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 31
-        },
-        "Hole Guard": {
-          "character_name": "Hole Guard",
-          "color_bgr": [
-            50,
-            205,
-            50
-          ],
-          "color_rgb": [
-            50,
-            205,
-            50
-          ],
-          "color_hex": "#32cd32",
-          "color_index": 10,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 32
-        },
-        "Guard Dekins": {
-          "character_name": "Guard Dekins",
-          "color_bgr": [
-            255,
-            0,
-            255
-          ],
-          "color_rgb": [
-            255,
-            0,
-            255
-          ],
-          "color_hex": "#ff00ff",
-          "color_index": 4,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 33
-        },
-        "Guard Wiley": {
-          "character_name": "Guard Wiley",
-          "color_bgr": [
-            220,
-            20,
-            60
-          ],
-          "color_rgb": [
-            60,
-            20,
-            220
-          ],
-          "color_hex": "#3c14dc",
-          "color_index": 14,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 34
-        },
-        "Moresby Batter": {
-          "character_name": "Moresby Batter",
-          "color_bgr": [
-            0,
-            255,
-            0
-          ],
-          "color_rgb": [
-            0,
-            255,
-            0
-          ],
-          "color_hex": "#00ff00",
-          "color_index": 0,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 35
-        },
-        "1954 Landlady": {
-          "character_name": "1954 Landlady",
-          "color_bgr": [
-            255,
-            105,
-            180
-          ],
-          "color_rgb": [
-            180,
-            105,
-            255
-          ],
-          "color_hex": "#b469ff",
-          "color_index": 16,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 36
-        },
-        "1954 Food-Way Manager": {
-          "character_name": "1954 Food-Way Manager",
-          "color_bgr": [
-            72,
-            61,
-            139
-          ],
-          "color_rgb": [
-            139,
-            61,
-            72
-          ],
-          "color_hex": "#8b3d48",
-          "color_index": 19,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 37
-        },
-        "1954 Food-Way Woman": {
-          "character_name": "1954 Food-Way Woman",
-          "color_bgr": [
-            255,
-            255,
-            0
-          ],
-          "color_rgb": [
-            0,
-            255,
-            255
-          ],
-          "color_hex": "#00ffff",
-          "color_index": 3,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 38
-        },
-        "1957 Parole Hearings Man": {
-          "character_name": "1957 Parole Hearings Man",
-          "color_bgr": [
-            255,
-            165,
-            0
-          ],
-          "color_rgb": [
-            0,
-            165,
-            255
-          ],
-          "color_hex": "#00a5ff",
-          "color_index": 7,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 39
-        },
-        "Ned Grimes": {
-          "character_name": "Ned Grimes",
-          "color_bgr": [
-            255,
-            215,
-            0
-          ],
-          "color_rgb": [
-            0,
-            215,
-            255
-          ],
-          "color_hex": "#00d7ff",
-          "color_index": 13,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 40
-        },
-        "Mail Caller": {
-          "character_name": "Mail Caller",
-          "color_bgr": [
-            255,
-            140,
-            0
-          ],
-          "color_rgb": [
-            0,
-            140,
-            255
-          ],
-          "color_hex": "#008cff",
-          "color_index": 18,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 41
-        },
-        "Elmo Blatch": {
-          "character_name": "Elmo Blatch",
-          "color_bgr": [
-            255,
-            69,
-            0
-          ],
-          "color_rgb": [
-            0,
-            69,
-            255
-          ],
-          "color_hex": "#0045ff",
-          "color_index": 11,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 42
-        },
-        "Elderly Hole Guard": {
-          "character_name": "Elderly Hole Guard",
-          "color_bgr": [
-            128,
-            0,
-            128
-          ],
-          "color_rgb": [
-            128,
-            0,
-            128
-          ],
-          "color_hex": "#800080",
-          "color_index": 6,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 43
-        },
-        "Bullhorn Tower Guard": {
-          "character_name": "Bullhorn Tower Guard",
-          "color_bgr": [
-            138,
-            43,
-            226
-          ],
-          "color_rgb": [
-            226,
-            43,
-            138
-          ],
-          "color_hex": "#e22b8a",
-          "color_index": 12,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 44
-        },
-        "Man Missing Guard": {
-          "character_name": "Man Missing Guard",
-          "color_bgr": [
-            0,
-            255,
-            255
-          ],
-          "color_rgb": [
-            255,
-            255,
-            0
-          ],
-          "color_hex": "#ffff00",
-          "color_index": 5,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 45
-        },
-        "Head Bull Haig": {
-          "character_name": "Head Bull Haig",
-          "color_bgr": [
-            255,
-            20,
-            147
-          ],
-          "color_rgb": [
-            147,
-            20,
-            255
-          ],
-          "color_hex": "#9314ff",
-          "color_index": 9,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 46
-        },
-        "Bank Teller": {
-          "character_name": "Bank Teller",
-          "color_bgr": [
-            0,
-            165,
-            255
-          ],
-          "color_rgb": [
-            255,
-            165,
-            0
-          ],
-          "color_hex": "#ffa500",
-          "color_index": 2,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 47
-        },
-        "Bank Manager": {
-          "character_name": "Bank Manager",
-          "color_bgr": [
-            124,
-            252,
-            0
-          ],
-          "color_rgb": [
-            0,
-            252,
-            124
-          ],
-          "color_hex": "#00fc7c",
-          "color_index": 17,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 48
-        },
-        "Bugle Editor": {
-          "character_name": "Bugle Editor",
-          "color_bgr": [
-            0,
-            191,
-            255
-          ],
-          "color_rgb": [
-            255,
-            191,
-            0
-          ],
-          "color_hex": "#ffbf00",
-          "color_index": 15,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 49
-        }
-      },
-      "shape_type": "rectangle",
-      "created_at": "",
-      "updated_at": ""
-    },
-    "泰坦尼克号": {
-      "characters": {
-        "Jack Dawson": {
-          "character_name": "Jack Dawson",
-          "color_bgr": [
-            0,
-            255,
-            0
-          ],
-          "color_rgb": [
-            0,
-            255,
-            0
-          ],
-          "color_hex": "#00ff00",
-          "color_index": 0,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 0
-        },
-        "Rose DeWitt Bukater": {
-          "character_name": "Rose DeWitt Bukater",
-          "color_bgr": [
-            255,
-            0,
-            0
-          ],
-          "color_rgb": [
-            0,
-            0,
-            255
-          ],
-          "color_hex": "#0000ff",
-          "color_index": 1,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 1
-        },
-        "Cal Hockley": {
-          "character_name": "Cal Hockley",
-          "color_bgr": [
-            0,
-            165,
-            255
-          ],
-          "color_rgb": [
-            255,
-            165,
-            0
-          ],
-          "color_hex": "#ffa500",
-          "color_index": 2,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 2
-        },
-        "Molly Brown": {
-          "character_name": "Molly Brown",
-          "color_bgr": [
-            255,
-            255,
-            0
-          ],
-          "color_rgb": [
-            0,
-            255,
-            255
-          ],
-          "color_hex": "#00ffff",
-          "color_index": 3,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 3
-        },
-        "Ruth DeWitt Bukater": {
-          "character_name": "Ruth DeWitt Bukater",
-          "color_bgr": [
-            255,
-            0,
-            255
-          ],
-          "color_rgb": [
-            255,
-            0,
-            255
-          ],
-          "color_hex": "#ff00ff",
-          "color_index": 4,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 4
-        },
-        "Old Rose": {
-          "character_name": "Old Rose",
-          "color_bgr": [
-            0,
-            255,
-            255
-          ],
-          "color_rgb": [
-            255,
-            255,
-            0
-          ],
-          "color_hex": "#ffff00",
-          "color_index": 5,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 5
-        },
-        "Brock Lovett": {
-          "character_name": "Brock Lovett",
-          "color_bgr": [
-            128,
-            0,
-            128
-          ],
-          "color_rgb": [
-            128,
-            0,
-            128
-          ],
-          "color_hex": "#800080",
-          "color_index": 6,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 6
-        },
-        "Captain Smith": {
-          "character_name": "Captain Smith",
-          "color_bgr": [
-            255,
-            165,
-            0
-          ],
-          "color_rgb": [
-            0,
-            165,
-            255
-          ],
-          "color_hex": "#00a5ff",
-          "color_index": 7,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 7
-        },
-        "Spicer Lovejoy": {
-          "character_name": "Spicer Lovejoy",
-          "color_bgr": [
-            0,
-            128,
-            255
-          ],
-          "color_rgb": [
-            255,
-            128,
-            0
-          ],
-          "color_hex": "#ff8000",
-          "color_index": 8,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 8
-        },
-        "Thomas Andrews": {
-          "character_name": "Thomas Andrews",
-          "color_bgr": [
-            255,
-            20,
-            147
-          ],
-          "color_rgb": [
-            147,
-            20,
-            255
-          ],
-          "color_hex": "#9314ff",
-          "color_index": 9,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 9
-        }
-      },
-      "shape_type": "rectangle",
-      "created_at": "",
-      "updated_at": ""
-    },
-    "钢铁侠": {
-      "characters": {
-        "Tony Stark": {
-          "character_name": "Tony Stark",
-          "color_bgr": [
-            0,
-            255,
-            0
-          ],
-          "color_rgb": [
-            0,
-            255,
-            0
-          ],
-          "color_hex": "#00ff00",
-          "color_index": 0,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 0
-        },
-        "Rhodey": {
-          "character_name": "Rhodey",
-          "color_bgr": [
-            255,
-            0,
-            0
-          ],
-          "color_rgb": [
-            0,
-            0,
-            255
-          ],
-          "color_hex": "#0000ff",
-          "color_index": 1,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 1
-        },
-        "Obadiah Stane": {
-          "character_name": "Obadiah Stane",
-          "color_bgr": [
-            0,
-            165,
-            255
-          ],
-          "color_rgb": [
-            255,
-            165,
-            0
-          ],
-          "color_hex": "#ffa500",
-          "color_index": 2,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 2
-        },
-        "Pepper Potts": {
-          "character_name": "Pepper Potts",
-          "color_bgr": [
-            255,
-            255,
-            0
-          ],
-          "color_rgb": [
-            0,
-            255,
-            255
-          ],
-          "color_hex": "#00ffff",
-          "color_index": 3,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 3
-        },
-        "Christine Everhart": {
-          "character_name": "Christine Everhart",
-          "color_bgr": [
-            255,
-            0,
-            255
-          ],
-          "color_rgb": [
-            255,
-            0,
-            255
-          ],
-          "color_hex": "#ff00ff",
-          "color_index": 4,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 4
-        },
-        "Yinsen": {
-          "character_name": "Yinsen",
-          "color_bgr": [
-            0,
-            255,
-            255
-          ],
-          "color_rgb": [
-            255,
-            255,
-            0
-          ],
-          "color_hex": "#ffff00",
-          "color_index": 5,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 5
-        },
-        "Raza": {
-          "character_name": "Raza",
-          "color_bgr": [
-            128,
-            0,
-            128
-          ],
-          "color_rgb": [
-            128,
-            0,
-            128
-          ],
-          "color_hex": "#800080",
-          "color_index": 6,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 6
-        },
-        "Agent Coulson": {
-          "character_name": "Agent Coulson",
-          "color_bgr": [
-            255,
-            165,
-            0
-          ],
-          "color_rgb": [
-            0,
-            165,
-            255
-          ],
-          "color_hex": "#00a5ff",
-          "color_index": 7,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 7
-        },
-        "General Gabriel": {
-          "character_name": "General Gabriel",
-          "color_bgr": [
-            0,
-            128,
-            255
-          ],
-          "color_rgb": [
-            255,
-            128,
-            0
-          ],
-          "color_hex": "#ff8000",
-          "color_index": 8,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 8
-        },
-        "Abu Bakaar": {
-          "character_name": "Abu Bakaar",
-          "color_bgr": [
-            255,
-            20,
-            147
-          ],
-          "color_rgb": [
-            147,
-            20,
-            255
-          ],
-          "color_hex": "#9314ff",
-          "color_index": 9,
-          "shape_type": "rectangle",
-          "line_thickness": 2,
-          "priority": 9
-        }
-      },
-      "shape_type": "rectangle",
-      "created_at": "",
-      "updated_at": ""
-    },
     "流浪地球2": {
       "characters": {
         "图恒宇": {
@@ -1451,6 +170,319 @@
           "character_name": "太空电梯袭击者",
           "color_bgr": [
             255,
+            69,
+            0
+          ],
+          "color_rgb": [
+            0,
+            69,
+            255
+          ],
+          "color_hex": "#0045ff",
+          "color_index": 11,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 11
+        },
+        "图丫丫": {
+          "character_name": "图丫丫",
+          "color_bgr": [
+            138,
+            43,
+            226
+          ],
+          "color_rgb": [
+            226,
+            43,
+            138
+          ],
+          "color_hex": "#e22b8a",
+          "color_index": 12,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 12
+        },
+        "马兆": {
+          "character_name": "马兆",
+          "color_bgr": [
+            255,
+            215,
+            0
+          ],
+          "color_rgb": [
+            0,
+            215,
+            255
+          ],
+          "color_hex": "#00d7ff",
+          "color_index": 13,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 13
+        },
+        "王志坚": {
+          "character_name": "王志坚",
+          "color_bgr": [
+            220,
+            20,
+            60
+          ],
+          "color_rgb": [
+            60,
+            20,
+            220
+          ],
+          "color_hex": "#3c14dc",
+          "color_index": 14,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 14
+        },
+        "图恒宇妻子": {
+          "character_name": "图恒宇妻子",
+          "color_bgr": [
+            0,
+            191,
+            255
+          ],
+          "color_rgb": [
+            255,
+            191,
+            0
+          ],
+          "color_hex": "#ffbf00",
+          "color_index": 15,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 15
+        },
+        "婚礼主持人": {
+          "character_name": "婚礼主持人",
+          "color_bgr": [
+            255,
+            105,
+            180
+          ],
+          "color_rgb": [
+            180,
+            105,
+            255
+          ],
+          "color_hex": "#b469ff",
+          "color_index": 16,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 16
+        },
+        "电视主持人": {
+          "character_name": "电视主持人",
+          "color_bgr": [
+            124,
+            252,
+            0
+          ],
+          "color_rgb": [
+            0,
+            252,
+            124
+          ],
+          "color_hex": "#00fc7c",
+          "color_index": 17,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 17
+        },
+        "建筑工人": {
+          "character_name": "建筑工人",
+          "color_bgr": [
+            72,
+            61,
+            139
+          ],
+          "color_rgb": [
+            139,
+            61,
+            72
+          ],
+          "color_hex": "#8b3d48",
+          "color_index": 19,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 19
+        }
+      },
+      "shape_type": "rectangle",
+      "created_at": "",
+      "updated_at": ""
+    },
+    "肖申克的救赎": {
+      "characters": {
+        "Andy Dufresne": {
+          "character_name": "Andy Dufresne",
+          "color_bgr": [
+            0,
+            255,
+            0
+          ],
+          "color_rgb": [
+            0,
+            255,
+            0
+          ],
+          "color_hex": "#00ff00",
+          "color_index": 0,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 0
+        },
+        "Ellis Boyd 'Red' Redding": {
+          "character_name": "Ellis Boyd 'Red' Redding",
+          "color_bgr": [
+            255,
+            0,
+            0
+          ],
+          "color_rgb": [
+            0,
+            0,
+            255
+          ],
+          "color_hex": "#0000ff",
+          "color_index": 1,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 1
+        },
+        "Warden Norton": {
+          "character_name": "Warden Norton",
+          "color_bgr": [
+            0,
+            165,
+            255
+          ],
+          "color_rgb": [
+            255,
+            165,
+            0
+          ],
+          "color_hex": "#ffa500",
+          "color_index": 2,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 2
+        },
+        "Heywood": {
+          "character_name": "Heywood",
+          "color_bgr": [
+            255,
+            255,
+            0
+          ],
+          "color_rgb": [
+            0,
+            255,
+            255
+          ],
+          "color_hex": "#00ffff",
+          "color_index": 3,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 3
+        },
+        "Captain Byron T. Hadley": {
+          "character_name": "Captain Byron T. Hadley",
+          "color_bgr": [
+            255,
+            0,
+            255
+          ],
+          "color_rgb": [
+            255,
+            0,
+            255
+          ],
+          "color_hex": "#ff00ff",
+          "color_index": 4,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 4
+        },
+        "Tommy": {
+          "character_name": "Tommy",
+          "color_bgr": [
+            0,
+            255,
+            255
+          ],
+          "color_rgb": [
+            255,
+            255,
+            0
+          ],
+          "color_hex": "#ffff00",
+          "color_index": 5,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 5
+        },
+        "Brooks Hatlen": {
+          "character_name": "Brooks Hatlen",
+          "color_bgr": [
+            128,
+            0,
+            128
+          ],
+          "color_rgb": [
+            128,
+            0,
+            128
+          ],
+          "color_hex": "#800080",
+          "color_index": 6,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 6
+        },
+        "Bogs Diamond": {
+          "character_name": "Bogs Diamond",
+          "color_bgr": [
+            255,
+            165,
+            0
+          ],
+          "color_rgb": [
+            0,
+            165,
+            255
+          ],
+          "color_hex": "#00a5ff",
+          "color_index": 7,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 7
+        },
+        "1946 D.A.": {
+          "character_name": "1946 D.A.",
+          "color_bgr": [
+            0,
+            128,
+            255
+          ],
+          "color_rgb": [
+            255,
+            128,
+            0
+          ],
+          "color_hex": "#ff8000",
+          "color_index": 8,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 8
+        },
+        "Skeet": {
+          "character_name": "Skeet",
+          "color_bgr": [
+            255,
             20,
             147
           ],
@@ -1464,6 +496,553 @@
           "shape_type": "rectangle",
           "line_thickness": 2,
           "priority": 9
+        },
+        "Jigger": {
+          "character_name": "Jigger",
+          "color_bgr": [
+            50,
+            205,
+            50
+          ],
+          "color_rgb": [
+            50,
+            205,
+            50
+          ],
+          "color_hex": "#32cd32",
+          "color_index": 10,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 10
+        },
+        "Floyd": {
+          "character_name": "Floyd",
+          "color_bgr": [
+            255,
+            69,
+            0
+          ],
+          "color_rgb": [
+            0,
+            69,
+            255
+          ],
+          "color_hex": "#0045ff",
+          "color_index": 11,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 11
+        },
+        "Snooze": {
+          "character_name": "Snooze",
+          "color_bgr": [
+            138,
+            43,
+            226
+          ],
+          "color_rgb": [
+            226,
+            43,
+            138
+          ],
+          "color_hex": "#e22b8a",
+          "color_index": 12,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 12
+        },
+        "Ernie": {
+          "character_name": "Ernie",
+          "color_bgr": [
+            255,
+            215,
+            0
+          ],
+          "color_rgb": [
+            0,
+            215,
+            255
+          ],
+          "color_hex": "#00d7ff",
+          "color_index": 13,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 13
+        },
+        "Guard Mert": {
+          "character_name": "Guard Mert",
+          "color_bgr": [
+            220,
+            20,
+            60
+          ],
+          "color_rgb": [
+            60,
+            20,
+            220
+          ],
+          "color_hex": "#3c14dc",
+          "color_index": 14,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 14
+        },
+        "Guard Trout": {
+          "character_name": "Guard Trout",
+          "color_bgr": [
+            0,
+            191,
+            255
+          ],
+          "color_rgb": [
+            255,
+            191,
+            0
+          ],
+          "color_hex": "#ffbf00",
+          "color_index": 15,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 15
+        },
+        "Andy Dufresne's Wife": {
+          "character_name": "Andy Dufresne's Wife",
+          "color_bgr": [
+            255,
+            105,
+            180
+          ],
+          "color_rgb": [
+            180,
+            105,
+            255
+          ],
+          "color_hex": "#b469ff",
+          "color_index": 16,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 16
+        },
+        "Glenn Quentin": {
+          "character_name": "Glenn Quentin",
+          "color_bgr": [
+            124,
+            252,
+            0
+          ],
+          "color_rgb": [
+            0,
+            252,
+            124
+          ],
+          "color_hex": "#00fc7c",
+          "color_index": 17,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 17
+        },
+        "1946 Judge": {
+          "character_name": "1946 Judge",
+          "color_bgr": [
+            255,
+            140,
+            0
+          ],
+          "color_rgb": [
+            0,
+            140,
+            255
+          ],
+          "color_hex": "#008cff",
+          "color_index": 18,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 18
+        },
+        "1947 Parole Hearings Man": {
+          "character_name": "1947 Parole Hearings Man",
+          "color_bgr": [
+            72,
+            61,
+            139
+          ],
+          "color_rgb": [
+            139,
+            61,
+            72
+          ],
+          "color_hex": "#8b3d48",
+          "color_index": 19,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 19
+        }
+      },
+      "shape_type": "rectangle",
+      "created_at": "",
+      "updated_at": ""
+    },
+    "教父": {
+      "characters": {
+        "Don Vito Corleone": {
+          "character_name": "Don Vito Corleone",
+          "color_bgr": [
+            0,
+            255,
+            0
+          ],
+          "color_rgb": [
+            0,
+            255,
+            0
+          ],
+          "color_hex": "#00ff00",
+          "color_index": 0,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 0
+        },
+        "Michael Corleone": {
+          "character_name": "Michael Corleone",
+          "color_bgr": [
+            255,
+            0,
+            0
+          ],
+          "color_rgb": [
+            0,
+            0,
+            255
+          ],
+          "color_hex": "#0000ff",
+          "color_index": 1,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 1
+        },
+        "Sonny Corleone": {
+          "character_name": "Sonny Corleone",
+          "color_bgr": [
+            0,
+            165,
+            255
+          ],
+          "color_rgb": [
+            255,
+            165,
+            0
+          ],
+          "color_hex": "#ffa500",
+          "color_index": 2,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 2
+        },
+        "Tom Hagen": {
+          "character_name": "Tom Hagen",
+          "color_bgr": [
+            255,
+            255,
+            0
+          ],
+          "color_rgb": [
+            0,
+            255,
+            255
+          ],
+          "color_hex": "#00ffff",
+          "color_index": 3,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 3
+        },
+        "Clemenza": {
+          "character_name": "Clemenza",
+          "color_bgr": [
+            255,
+            0,
+            255
+          ],
+          "color_rgb": [
+            255,
+            0,
+            255
+          ],
+          "color_hex": "#ff00ff",
+          "color_index": 4,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 4
+        },
+        "Kay Adams": {
+          "character_name": "Kay Adams",
+          "color_bgr": [
+            0,
+            255,
+            255
+          ],
+          "color_rgb": [
+            255,
+            255,
+            0
+          ],
+          "color_hex": "#ffff00",
+          "color_index": 5,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 5
+        },
+        "Connie Corleone Rizzi": {
+          "character_name": "Connie Corleone Rizzi",
+          "color_bgr": [
+            128,
+            0,
+            128
+          ],
+          "color_rgb": [
+            128,
+            0,
+            128
+          ],
+          "color_hex": "#800080",
+          "color_index": 6,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 6
+        },
+        "Carlo Rizzi": {
+          "character_name": "Carlo Rizzi",
+          "color_bgr": [
+            255,
+            165,
+            0
+          ],
+          "color_rgb": [
+            0,
+            165,
+            255
+          ],
+          "color_hex": "#00a5ff",
+          "color_index": 7,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 7
+        },
+        "Captain McCluskey": {
+          "character_name": "Captain McCluskey",
+          "color_bgr": [
+            0,
+            128,
+            255
+          ],
+          "color_rgb": [
+            255,
+            128,
+            0
+          ],
+          "color_hex": "#ff8000",
+          "color_index": 8,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 8
+        },
+        "Jack Woltz": {
+          "character_name": "Jack Woltz",
+          "color_bgr": [
+            255,
+            20,
+            147
+          ],
+          "color_rgb": [
+            147,
+            20,
+            255
+          ],
+          "color_hex": "#9314ff",
+          "color_index": 9,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 9
+        },
+        "Barzini": {
+          "character_name": "Barzini",
+          "color_bgr": [
+            50,
+            205,
+            50
+          ],
+          "color_rgb": [
+            50,
+            205,
+            50
+          ],
+          "color_hex": "#32cd32",
+          "color_index": 10,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 10
+        },
+        "Sollozzo": {
+          "character_name": "Sollozzo",
+          "color_bgr": [
+            255,
+            69,
+            0
+          ],
+          "color_rgb": [
+            0,
+            69,
+            255
+          ],
+          "color_hex": "#0045ff",
+          "color_index": 11,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 11
+        },
+        "Sal Tessio": {
+          "character_name": "Sal Tessio",
+          "color_bgr": [
+            138,
+            43,
+            226
+          ],
+          "color_rgb": [
+            226,
+            43,
+            138
+          ],
+          "color_hex": "#e22b8a",
+          "color_index": 12,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 12
+        },
+        "Fredo Corleone": {
+          "character_name": "Fredo Corleone",
+          "color_bgr": [
+            255,
+            215,
+            0
+          ],
+          "color_rgb": [
+            0,
+            215,
+            255
+          ],
+          "color_hex": "#00d7ff",
+          "color_index": 13,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 13
+        },
+        "Cuneo": {
+          "character_name": "Cuneo",
+          "color_bgr": [
+            220,
+            20,
+            60
+          ],
+          "color_rgb": [
+            60,
+            20,
+            220
+          ],
+          "color_hex": "#3c14dc",
+          "color_index": 14,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 14
+        },
+        "Johnny Fontane": {
+          "character_name": "Johnny Fontane",
+          "color_bgr": [
+            0,
+            191,
+            255
+          ],
+          "color_rgb": [
+            255,
+            191,
+            0
+          ],
+          "color_hex": "#ffbf00",
+          "color_index": 15,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 15
+        },
+        "Mama Corleone": {
+          "character_name": "Mama Corleone",
+          "color_bgr": [
+            255,
+            105,
+            180
+          ],
+          "color_rgb": [
+            180,
+            105,
+            255
+          ],
+          "color_hex": "#b469ff",
+          "color_index": 16,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 16
+        },
+        "Luca Brasi": {
+          "character_name": "Luca Brasi",
+          "color_bgr": [
+            124,
+            252,
+            0
+          ],
+          "color_rgb": [
+            0,
+            252,
+            124
+          ],
+          "color_hex": "#00fc7c",
+          "color_index": 17,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 17
+        },
+        "Paulie Gatto": {
+          "character_name": "Paulie Gatto",
+          "color_bgr": [
+            255,
+            140,
+            0
+          ],
+          "color_rgb": [
+            0,
+            140,
+            255
+          ],
+          "color_hex": "#008cff",
+          "color_index": 18,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 18
+        },
+        "Bonasera": {
+          "character_name": "Bonasera",
+          "color_bgr": [
+            72,
+            61,
+            139
+          ],
+          "color_rgb": [
+            139,
+            61,
+            72
+          ],
+          "color_hex": "#8b3d48",
+          "color_index": 19,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 19
         }
       },
       "shape_type": "rectangle",

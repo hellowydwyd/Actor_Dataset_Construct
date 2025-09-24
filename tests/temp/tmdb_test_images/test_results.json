@@ -1,0 +1,149 @@
+{
+  "api_calls": [
+    {
+      "test": "configuration",
+      "status": "success",
+      "response_size": 1073
+    },
+    {
+      "test": "movie_search",
+      "movie": "教父",
+      "status": "success",
+      "movie_id": 238
+    },
+    {
+      "test": "movie_search",
+      "movie": "阿甘正传",
+      "status": "success",
+      "movie_id": 13
+    },
+    {
+      "test": "movie_search",
+      "movie": "肖申克的救赎",
+      "status": "success",
+      "movie_id": 278
+    },
+    {
+      "test": "actor_search",
+      "actor": "阿尔·帕西诺",
+      "status": "success",
+      "person_id": 1158,
+      "image_count": 18
+    },
+    {
+      "test": "actor_search",
+      "actor": "汤姆·汉克斯",
+      "status": "success",
+      "person_id": 31,
+      "image_count": 19
+    },
+    {
+      "test": "actor_search",
+      "actor": "摩根·弗里曼",
+      "status": "success",
+      "person_id": 192,
+      "image_count": 18
+    },
+    {
+      "test": "actor_search",
+      "actor": "马龙·白兰度",
+      "status": "success",
+      "person_id": 3084,
+      "image_count": 10
+    },
+    {
+      "test": "crawler_integration",
+      "actor": "阿尔·帕西诺",
+      "status": "success",
+      "image_count": 1
+    },
+    {
+      "test": "full_workflow",
+      "movie": "教父",
+      "status": "success",
+      "actors_processed": 3,
+      "actors_successful": 3
+    }
+  ],
+  "image_downloads": [
+    {
+      "actor": "阿尔·帕西诺",
+      "url": "https://image.tmdb.org/t/p/w780/2dGBb1fOcNdZjtQToVPFxXjm4ke.jpg",
+      "status": "success",
+      "size": 137211,
+      "file": "temp\\tmdb_test_images\\阿尔·帕西诺_1.jpg"
+    },
+    {
+      "actor": "阿尔·帕西诺",
+      "url": "https://image.tmdb.org/t/p/w780/sDcYe21O0XEaOPXKpbQWEEdvnCF.jpg",
+      "status": "success",
+      "size": 90924,
+      "file": "temp\\tmdb_test_images\\阿尔·帕西诺_2.jpg"
+    },
+    {
+      "actor": "汤姆·汉克斯",
+      "url": "https://image.tmdb.org/t/p/w780/oFvZoKI6lvU03n4YoNGAll9rkas.jpg",
+      "status": "success",
+      "size": 103440,
+      "file": "temp\\tmdb_test_images\\汤姆·汉克斯_1.jpg"
+    },
+    {
+      "actor": "汤姆·汉克斯",
+      "url": "https://image.tmdb.org/t/p/w780/xV5zba3TFMcs1ZS8lxmOlJ1S6Fo.jpg",
+      "status": "success",
+      "size": 77920,
+      "file": "temp\\tmdb_test_images\\汤姆·汉克斯_2.jpg"
+    },
+    {
+      "actor": "摩根·弗里曼",
+      "url": "https://image.tmdb.org/t/p/w780/905k0RFzH0Kd6gx8oSxRdnr6FL.jpg",
+      "status": "success",
+      "size": 187686,
+      "file": "temp\\tmdb_test_images\\摩根·弗里曼_1.jpg"
+    },
+    {
+      "actor": "摩根·弗里曼",
+      "url": "https://image.tmdb.org/t/p/w780/1ahENoyEgKSbRUd0IsydIff7rt1.jpg",
+      "status": "success",
+      "size": 157668,
+      "file": "temp\\tmdb_test_images\\摩根·弗里曼_2.jpg"
+    },
+    {
+      "actor": "马龙·白兰度",
+      "url": "https://image.tmdb.org/t/p/w780/5o8whyfLBWXLODEcMP8K45lPTjT.jpg",
+      "status": "success",
+      "size": 147436,
+      "file": "temp\\tmdb_test_images\\马龙·白兰度_1.jpg"
+    },
+    {
+      "actor": "马龙·白兰度",
+      "url": "https://image.tmdb.org/t/p/w500/ywzqJ0tDRmsAT6NB9xPyZu8C2hJ.jpg",
+      "status": "success",
+      "size": 42367,
+      "file": "temp\\tmdb_test_images\\马龙·白兰度_2.jpg"
+    },
+    {
+      "actor": "马龙·白兰度",
+      "url": "https://image.tmdb.org/t/p/w780/5o8whyfLBWXLODEcMP8K45lPTjT.jpg",
+      "status": "success",
+      "size": 147436,
+      "file": "temp\\tmdb_test_images\\马龙·白兰度_1.jpg"
+    },
+    {
+      "actor": "阿尔·帕西诺",
+      "url": "https://image.tmdb.org/t/p/w780/2dGBb1fOcNdZjtQToVPFxXjm4ke.jpg",
+      "status": "success",
+      "size": 137211,
+      "file": "temp\\tmdb_test_images\\阿尔·帕西诺_1.jpg"
+    },
+    {
+      "actor": "詹姆斯·凯恩",
+      "url": "https://image.tmdb.org/t/p/w500/kV8TPevEwDORzzKvPNRgRaKsq46.jpg",
+      "status": "success",
+      "size": 65681,
+      "file": "temp\\tmdb_test_images\\詹姆斯·凯恩_1.jpg"
+    }
+  ],
+  "errors": [],
+  "summary": {}
+}
