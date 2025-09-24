@@ -4,66 +4,15 @@ tmdb:
   base_url: "https://api.themoviedb.org/3"
   image_base_url: "https://image.tmdb.org/t/p/"
   
-  # 代理配置 (Cloud Studio环境适配)
-  proxy:
-    enabled: false  # 设置为true启用代理
-    http_proxy: ""   # HTTP代理地址，如: http://proxy-server:port
-    https_proxy: ""  # HTTPS代理地址，如: http://proxy-server:port
-  
   # 网络配置
   timeout: 30        # 请求超时时间(秒)
   max_retries: 5     # 最大重试次数
   retry_delay: 2     # 重试延迟(秒)
-  # SSL配置 (Cloud Studio环境)
-  ssl_verify: false    # 禁用SSL验证解决Cloud Studio连接问题
-  timeout: 30          # 增加超时时间
 
-
-# 图片爬取配置
+# 图片下载配置
 crawler:
-  max_images_per_actor: 10  # 每个演员最多收集的图片数量（降低避免过多）
-  min_images_per_actor: 3   # 每个演员最少需要的图片数量（保证3张）
-  min_face_size: 112        # 最小人脸尺寸
-  image_quality_threshold: 0.6  # 图片质量阈值（略微降低以增加成功率）
   download_timeout: 30      # 下载超时时间(秒)
-  concurrent_downloads: 3   # 并发下载数量（降低避免被封）
-  single_person_only: true  # 只保留单人照片
-  max_faces_per_image: 1    # 每张图片最多允许的人脸数
-  
-  # 图片来源配置 (按优先级和成功率排序)
-  sources:
-    - name: "tmdb_images"
-      enabled: true
-      max_results: 5
-      description: "TMDB官方图片 (高质量，100%成功率)"
-      priority: 1
-    - name: "baidu_images"
-      enabled: true
-      max_results: 8
-      description: "百度图片搜索 (国内主力源，成功率较高)"
-      priority: 2
-    - name: "bing_images"
-      enabled: true
-      max_results: 5
-      description: "Bing图片搜索 (国际源，质量稳定)"
-      priority: 3
-    - name: "sogou_images"
-      enabled: false
-      max_results: 3
-      description: "搜狗图片搜索 (备用源)"
-      priority: 4
-  
-  # 反爬策略配置
-  anti_crawling:
-    max_retries: 3              # 最大重试次数
-    retry_delay_min: 0.5        # 最小重试延迟(秒)
-    retry_delay_max: 2.0        # 最大重试延迟(秒)
-    request_delay_min: 1.0      # 请求间最小延迟(秒)
-    request_delay_max: 2.0      # 请求间最大延迟(秒)
-    blocked_domains:            # 预设被封禁域名
-      - "douyinpic.com"
-      - "bytedance.com"
-      - "tiktok.com"
+  concurrent_downloads: 3   # 并发下载数量
 
 # InsightFace配置
 face_recognition:
