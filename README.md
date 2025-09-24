@@ -70,22 +70,6 @@ Actor_dataset_contruct/
 
 ## 🚀 快速开始
 
-### 方法1: Cloud Studio 一键部署 (推荐)
-
-**步骤**：
-1. 访问：https://cloudstudio.net/
-2. 登录 → 创建工作空间 → 从Git导入
-3. 仓库地址：`https://github.com/hellowydwyd/Actor-Dataset-Construct`
-4. 选择Python 3.9环境
-5. 在终端执行：
-```bash
-pip install -r requirements-china.txt
-python start_cloudstudio.py
-```
-6. 点击"预览"按钮访问公网应用
-
-### 方法2: 本地安装运行
-
 #### 1. 克隆项目
 ```bash
 git clone https://github.com/hellowydwyd/Actor-Dataset-Construct.git
@@ -122,11 +106,13 @@ tmdb:
 #### 4. 启动应用
 ```bash
 # Web界面 (推荐)
-python main.py web --host 0.0.0.0 --port 5000
+python web/app.py
 
-# 或使用Cloud Studio启动脚本
-python start_cloudstudio.py
+# 命令行模式
+python main.py
 ```
+
+访问 http://localhost:5000 使用Web界面
 
 ## ⚙️ 配置说明
 
