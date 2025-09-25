@@ -216,6 +216,7 @@ python main.py search --image "path/to/photo.jpg"
 
 ## 📖 文档
 
+- 🔄 [项目更新指南](docs/项目更新指南.md) - **如何获取和更新项目**
 - 📁 [项目目录结构说明](docs/项目目录结构说明.md)
 - 🔧 [中文文字渲染解决方案](docs/中文文字渲染解决方案.md)
 - 🕷️ [爬虫优化说明](docs/爬虫优化说明.md)

@@ -15,7 +15,7 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 from src.video_recognition.video_processor import VideoFaceRecognizer
 from src.utils.logger import get_logger
-from src.utils.config_loader import load_config
+from src.utils.config_loader import config
 
 logger = get_logger(__name__)
 
@@ -99,8 +99,8 @@ def process_long_movie(input_path: str, output_path: str = None, **kwargs) -> No
     print("=" * 60)
     
     # 获取配置
-    config = load_config()
-    video_config = config.get('video_processing', {})
+    # config对象已经在顶部导入，无需重新加载
+    video_config = config.get_config().get('video_processing', {})
     
     # 确定处理模式
     mode = determine_processing_mode(input_path, kwargs.get('mode', 'auto'))
