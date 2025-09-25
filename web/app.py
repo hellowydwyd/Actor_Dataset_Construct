@@ -44,7 +44,25 @@ def create_app():
     # 配置
     web_config = config.get_web_config()
     app.config['SECRET_KEY'] = 'your-secret-key-here'
-    app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max file size
+    
+    # 从配置文件读取文件大小限制
+    max_file_size = web_config.get('upload', {}).get('max_file_size', '2GB')
+    if isinstance(max_file_size, str):
+        # 解析文件大小字符串 (如 "2GB", "500MB")
+        size_str = max_file_size.upper()
+        if size_str.endswith('GB'):
+            max_size_bytes = int(float(size_str[:-2]) * 1024 * 1024 * 1024)
+        elif size_str.endswith('MB'):
+            max_size_bytes = int(float(size_str[:-2]) * 1024 * 1024)
+        elif size_str.endswith('KB'):
+            max_size_bytes = int(float(size_str[:-2]) * 1024)
+        else:
+            max_size_bytes = int(max_file_size)
+    else:
+        max_size_bytes = max_file_size
+    
+    app.config['MAX_CONTENT_LENGTH'] = max_size_bytes
+    logger.info(f"文件上传大小限制设置为: {max_file_size} ({max_size_bytes} bytes)")
     
     # 初始化组件
     try:
@@ -257,7 +275,13 @@ def create_app():
                                           config.get_tmdb_config().get('api_key') != 'your_tmdb_api_key_here'),
                     'face_recognition_model': config.get_face_recognition_config().get('model_name', 'buffalo_l'),
                     'vector_database_type': config.get_vector_database_config().get('type', 'faiss'),
-                    'max_images_per_actor': config.get_crawler_config().get('max_images_per_actor', 20)
+                    'max_images_per_actor': config.get_crawler_config().get('max_images_per_actor', 20),
+                    'upload': {
+                        'max_file_size': web_config.get('upload', {}).get('max_file_size', '2GB'),
+                        'max_file_size_bytes': app.config.get('MAX_CONTENT_LENGTH', 2 * 1024 * 1024 * 1024),
+                        'allowed_video_formats': web_config.get('upload', {}).get('allowed_video_formats', ['.mp4', '.avi', '.mov', '.mkv', '.flv', '.wmv']),
+                        'allowed_image_formats': web_config.get('upload', {}).get('allowed_image_formats', ['.jpg', '.jpeg', '.png', '.bmp', '.tiff'])
+                    }
                 }
             })
             

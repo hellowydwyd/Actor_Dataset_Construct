@@ -51,6 +51,23 @@ web:
   host: "0.0.0.0"
   port: 5000
   debug: true
+  
+  # 文件上传配置
+  upload:
+    max_file_size: "2GB"           # 最大文件大小
+    allowed_video_formats:         # 支持的视频格式
+      - ".mp4"
+      - ".avi"
+      - ".mov" 
+      - ".mkv"
+      - ".flv"
+      - ".wmv"
+    allowed_image_formats:         # 支持的图片格式
+      - ".jpg"
+      - ".jpeg"
+      - ".png"
+      - ".bmp"
+      - ".tiff"
 
 # 视频处理配置
 video_processing:

@@ -1212,7 +1212,7 @@
                                            accept=".mp4,.avi,.mov,.mkv,.flv,.wmv" required>
                                     <div class="form-text" id="file-help">
                                         <strong>视频处理：</strong>逐帧识别并输出带标注的完整视频
-                                        <br><small class="text-muted">支持格式：MP4, AVI, MOV, MKV, FLV, WMV</small>
+                                        <br><small class="text-muted">支持格式：MP4, AVI, MOV, MKV, FLV, WMV | 最大文件大小：2GB</small>
                                     </div>
                                 </div>
                                 
@@ -1494,7 +1494,8 @@
                   loadDatabaseContent(),
                   loadVideoActors(),
                   loadFreeCrawlerStatus(),
-                  loadMoviesList()
+                  loadMoviesList(),
+                  loadUploadConfig()
               ]);
               console.log('初始数据加载完成');
             } catch (error) {
@@ -3856,6 +3857,31 @@
             }
 
             resultsDiv.style.display = 'block';
+        }
+
+        // 加载上传配置信息
+        async function loadUploadConfig() {
+            try {
+                const response = await fetch('/api/config');
+                const data = await response.json();
+                
+                if (data.success && data.config.upload) {
+                    const uploadConfig = data.config.upload;
+                    const maxSize = uploadConfig.max_file_size;
+                    
+                    // 更新文件帮助文本
+                    const fileHelp = document.getElementById('file-help');
+                    if (fileHelp) {
+                        const formats = uploadConfig.allowed_video_formats.join(', ').replace(/\./g, '').toUpperCase();
+                        fileHelp.innerHTML = `
+                            <strong>视频处理：</strong>逐帧识别并输出带标注的完整视频
+                            <br><small class="text-muted">支持格式：${formats} | 最大文件大小：${maxSize}</small>
+                        `;
+                    }
+                }
+            } catch (error) {
+                console.error('加载上传配置失败:', error);
+            }
         }
 
         // 初始化平滑滚动

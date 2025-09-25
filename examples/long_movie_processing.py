@@ -100,7 +100,7 @@ def process_long_movie(input_path: str, output_path: str = None, **kwargs) -> No
     
     # 获取配置
     # config对象已经在顶部导入，无需重新加载
-    video_config = config.get_config().get('video_processing', {})
+    video_config = config.get('video_processing', {})
     
     # 确定处理模式
     mode = determine_processing_mode(input_path, kwargs.get('mode', 'auto'))
