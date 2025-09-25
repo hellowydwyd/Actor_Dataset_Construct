@@ -2251,6 +2251,7 @@
         async function searchFace() {
             const imageFile = document.getElementById('search-image').files[0];
             const topK = document.getElementById('top-k').value;
+            const similarityThreshold = document.getElementById('similarity-threshold').value;
 
             if (!imageFile) {
                 alert('请选择图片文件');
@@ -2264,6 +2265,7 @@
             const formData = new FormData();
             formData.append('image', imageFile);
             formData.append('top_k', topK);
+            formData.append('similarity_threshold', similarityThreshold);
 
             try {
                 const response = await fetch('/api/search_face', {

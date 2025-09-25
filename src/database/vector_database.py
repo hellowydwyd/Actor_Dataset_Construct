@@ -96,7 +96,7 @@ class FaissVectorDatabase(VectorDatabaseInterface):
         self.metadata_file = self.embeddings_dir / 'metadata.pkl'
         self.id_mapping_file = self.embeddings_dir / 'id_mapping.json'
     
-    def _create_index(self) -> faiss.Index:
+    def _create_index(self):
         """创建Faiss索引"""
         if self.index_type == "Flat":
             # 精确搜索，适合小数据集

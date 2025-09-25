@@ -179,6 +179,7 @@ def create_app():
                 return jsonify({'error': '请选择图片文件'}), 400
             
             top_k = int(request.form.get('top_k', 10))
+            similarity_threshold = float(request.form.get('similarity_threshold', 0.6))
             
             if not face_processor or not vector_db:
                 return jsonify({'error': '系统未初始化'}), 500
@@ -198,7 +199,7 @@ def create_app():
                 
                 # 使用第一张人脸搜索
                 query_embedding = faces[0]['embedding']
-                results = vector_db.search_similar_faces(query_embedding, top_k)
+                results = vector_db.search_similar_faces(query_embedding, top_k, similarity_threshold)
                 
                 return jsonify({
                     'success': True,
