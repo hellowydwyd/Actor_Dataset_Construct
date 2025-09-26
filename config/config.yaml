@@ -23,7 +23,7 @@ storage:
   images_dir: D:\DEVELOPE\Actor_dataset_contruct\data\images
   metadata_dir: D:\DEVELOPE\Actor_dataset_contruct\data\metadata
 tmdb:
-  api_key: your_TMDB_api_key
+  api_key: your_tmdb_api_key_here
   base_url: https://api.tmdb.org/3
   image_base_url: https://image.tmdb.org/t/p/
   max_retries: 5
