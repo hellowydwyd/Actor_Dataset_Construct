@@ -1003,7 +1003,6 @@ def create_app():
             if max_faces is not None:
                 if not isinstance(max_faces, int) or max_faces < 1 or max_faces > 20:
                     return jsonify({'error': 'max_faces_per_actor必须是1-20之间的整数'}), 400
-                face_processor.max_faces_per_actor = max_faces
                 # 保存到配置文件
                 config.update_config('face_recognition.max_faces_per_actor', max_faces)
                 config_updated = True
@@ -1011,10 +1010,19 @@ def create_app():
             if min_score is not None:
                 if not isinstance(min_score, (int, float)) or min_score < 0.1 or min_score > 1.0:
                     return jsonify({'error': 'min_face_score必须是0.1-1.0之间的数值'}), 400
-                face_processor.min_face_score = min_score
                 # 保存到配置文件
                 config.update_config('face_recognition.min_face_score', min_score)
                 config_updated = True
+            
+            # 重新初始化face_processor实例以加载新配置
+            if config_updated:
+                nonlocal face_processor
+                try:
+                    face_processor = FaceProcessor()
+                    logger.info("face_processor实例已重新初始化，加载了新配置")
+                except Exception as e:
+                    logger.error(f"重新初始化face_processor失败: {e}")
+                    return jsonify({'error': '更新配置后重新初始化失败'}), 500
             
             # 返回更新后的配置
             updated_config = face_processor.get_face_config()

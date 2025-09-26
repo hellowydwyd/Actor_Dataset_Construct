@@ -385,7 +385,19 @@ class FaceProcessor:
             if len(final_faces) >= max_faces:
                 break
         
-        logger.info(f"从 {len(faces)} 张人脸中筛选出 {len(final_faces)} 张最佳人脸 (最大限制: {max_faces}, 分数阈值: {min_score})")
+        # 详细的过滤统计
+        original_count = len(faces)
+        after_quality_filter = len(filtered_faces)
+        final_count = len(final_faces)
+        
+        logger.info(f"人脸筛选统计: 原始{original_count}张 → 质量过滤后{after_quality_filter}张 → 最终{final_count}张 "
+                   f"(限制:{max_faces}, 阈值:{min_score})")
+        
+        if original_count > final_count:
+            filtered_out = original_count - final_count
+            logger.info(f"过滤掉了 {filtered_out} 张人脸 (质量不足: {original_count - after_quality_filter}, "
+                       f"重复/超限: {after_quality_filter - final_count})")
+        
         return final_faces
     
     def get_face_config(self) -> Dict[str, Any]:
