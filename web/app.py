@@ -12,6 +12,7 @@ import queue
 import json
 import base64
 import io
+import time
 from PIL import Image
 import numpy as np
 import cv2
@@ -882,9 +883,161 @@ def create_app():
             logger.error(f"获取电影列表失败: {e}")
             return jsonify({'error': str(e)}), 500
     
+    @app.route('/api/delete_movie/<movie_title>', methods=['DELETE'])
+    def delete_movie(movie_title):
+        """删除指定电影的所有数据"""
+        try:
+            if not vector_db:
+                return jsonify({'error': '系统未初始化'}), 500
+            
+            logger.info(f"开始删除电影数据: {movie_title}")
+            
+            # 删除向量数据库中的电影数据
+            delete_result = vector_db.delete_movie_data(movie_title)
+            
+            if not delete_result.get('found', False):
+                return jsonify({
+                    'success': False,
+                    'error': f"未找到电影 '{movie_title}' 的数据"
+                }), 404
+            
+            # 删除图片文件
+            deleted_images = 0
+            try:
+                from pathlib import Path
+                images_dir = Path(config.get('storage.images_dir'))
+                
+                # 清理电影名称用于文件夹匹配
+                safe_movie_title = "".join(c for c in movie_title if c.isalnum() or c in (' ', '-', '_')).rstrip()
+                movie_dir = images_dir / safe_movie_title
+                
+                if movie_dir.exists() and movie_dir.is_dir():
+                    import shutil
+                    # 计算要删除的图片数量
+                    for actor_dir in movie_dir.iterdir():
+                        if actor_dir.is_dir():
+                            deleted_images += len(list(actor_dir.glob('*.jpg'))) + len(list(actor_dir.glob('*.png')))
+                    
+                    # 删除整个电影目录
+                    shutil.rmtree(movie_dir)
+                    logger.info(f"删除电影图片目录: {movie_dir}")
+                
+            except Exception as e:
+                logger.error(f"删除电影图片失败: {e}")
+                # 即使图片删除失败，也继续处理metadata删除
+            
+            # 删除metadata中的电影配置
+            try:
+                metadata_dir = Path(config.get('storage.images_dir')).parent / 'metadata'
+                color_config_file = metadata_dir / 'color_config.json'
+                
+                if color_config_file.exists():
+                    import json
+                    with open(color_config_file, 'r', encoding='utf-8') as f:
+                        color_config = json.load(f)
+                    
+                    # 删除电影相关的颜色配置
+                    if 'movies' in color_config and movie_title in color_config['movies']:
+                        del color_config['movies'][movie_title]
+                        
+                        # 保存更新后的配置
+                        with open(color_config_file, 'w', encoding='utf-8') as f:
+                            json.dump(color_config, f, ensure_ascii=False, indent=2)
+                        
+                        logger.info(f"删除电影颜色配置: {movie_title}")
+                
+            except Exception as e:
+                logger.error(f"删除电影metadata失败: {e}")
+            
+            # 保存数据库更改
+            vector_db.save_database()
+            
+            logger.info(f"电影 '{movie_title}' 删除完成")
+            
+            return jsonify({
+                'success': True,
+                'message': f"成功删除电影 '{movie_title}' 的所有数据",
+                'deleted_faces': delete_result['deleted_faces'],
+                'deleted_actors': delete_result['deleted_actors'],
+                'deleted_actor_names': delete_result.get('deleted_actor_names', []),
+                'deleted_images': deleted_images,
+                'movie_title': movie_title
+            })
+            
+        except Exception as e:
+            logger.error(f"删除电影数据失败: {e}")
+            return jsonify({'error': str(e)}), 500
+    
+    @app.route('/api/face_config', methods=['GET'])
+    def get_face_config():
+        """获取人脸处理配置"""
+        try:
+            if not face_processor:
+                return jsonify({'error': '人脸处理器未初始化'}), 500
+            
+            config_info = face_processor.get_face_config()
+            return jsonify({
+                'success': True,
+                'config': config_info
+            })
+            
+        except Exception as e:
+            logger.error(f"获取人脸配置失败: {e}")
+            return jsonify({'error': str(e)}), 500
+    
+    @app.route('/api/face_config', methods=['POST'])
+    def update_face_config():
+        """更新人脸处理配置"""
+        try:
+            data = request.get_json()
+            
+            if not data:
+                return jsonify({'error': '无效的请求数据'}), 400
+            
+            # 验证参数
+            max_faces = data.get('max_faces_per_actor')
+            min_score = data.get('min_face_score')
+            
+            config_updated = False
+            
+            if max_faces is not None:
+                if not isinstance(max_faces, int) or max_faces < 1 or max_faces > 20:
+                    return jsonify({'error': 'max_faces_per_actor必须是1-20之间的整数'}), 400
+                face_processor.max_faces_per_actor = max_faces
+                # 保存到配置文件
+                config.update_config('face_recognition.max_faces_per_actor', max_faces)
+                config_updated = True
+            
+            if min_score is not None:
+                if not isinstance(min_score, (int, float)) or min_score < 0.1 or min_score > 1.0:
+                    return jsonify({'error': 'min_face_score必须是0.1-1.0之间的数值'}), 400
+                face_processor.min_face_score = min_score
+                # 保存到配置文件
+                config.update_config('face_recognition.min_face_score', min_score)
+                config_updated = True
+            
+            # 返回更新后的配置
+            updated_config = face_processor.get_face_config()
+            
+            success_msg = f"人脸配置已更新: max_faces={max_faces}, min_score={min_score}"
+            if config_updated:
+                success_msg += " (已保存到配置文件)"
+            
+            logger.info(success_msg)
+            
+            return jsonify({
+                'success': True,
+                'message': '配置更新成功并已保存到文件',
+                'config': updated_config
+            })
+            
+        except Exception as e:
+            logger.error(f"更新人脸配置失败: {e}")
+            return jsonify({'error': str(e)}), 500
+    
     @app.route('/api/video_progress/<task_id>')
     def video_progress(task_id):
-        """视频处理进度SSE端点"""
+        """视频处理进度SSE端点 - 优化版本"""
         def generate():
             if task_id not in progress_queues:
                 yield "data: {\"error\": \"任务不存在\"}\n\n"
@@ -892,41 +1045,73 @@ def create_app():
             
             progress_queue = progress_queues[task_id]
             completed = False
+            last_progress_time = time.time()
+            heartbeat_interval = 5  # 心跳间隔（秒）
             
             try:
                 while not completed:
                     try:
-                        # 等待进度更新
-                        progress_data = progress_queue.get(timeout=2)
+                        # 使用较短的超时时间，提高响应性
+                        progress_data = progress_queue.get(timeout=1)
                         
                         if progress_data is None:  # 结束信号
                             break
                         
                         # 发送进度数据
                         yield f"data: {json.dumps(progress_data)}\n\n"
-                        logger.info(f"发送进度数据: {progress_data.get('type', 'unknown')}")
+                        last_progress_time = time.time()
                         
                         # 检查是否完成
                         if progress_data.get('type') in ['complete', 'error']:
                             completed = True
-                            logger.info(f"视频处理完成，发送完成信号: {progress_data.get('type')}")
-                            # 稍微延迟以确保客户端收到完成信号
-                            import time
-                            time.sleep(0.1)
+                            logger.info(f"视频处理完成: {progress_data.get('type')}")
+                            # 短暂延迟确保数据传输完成
+                            time.sleep(0.05)
                         
                     except queue.Empty:
-                        # 发送心跳
-                        yield "data: {\"type\": \"heartbeat\"}\n\n"
+                        current_time = time.time()
+                        # 只在需要时发送心跳
+                        if current_time - last_progress_time > heartbeat_interval:
+                            yield "data: {\"type\": \"heartbeat\", \"timestamp\": %d}\n\n" % int(current_time)
+                            last_progress_time = current_time
+                            
+                        # 检查队列中是否有堆积的消息
+                        if not progress_queue.empty():
+                            # 快速处理队列中的消息，防止堆积
+                            batch_messages = []
+                            try:
+                                while len(batch_messages) < 5:  # 最多批处理5条消息
+                                    msg = progress_queue.get_nowait()
+                                    if msg is None:
+                                        break
+                                    batch_messages.append(msg)
+                            except queue.Empty:
+                                pass
+                            
+                            # 只发送最新的消息，丢弃过期的进度更新
+                            if batch_messages:
+                                latest_msg = batch_messages[-1]
+                                yield f"data: {json.dumps(latest_msg)}\n\n"
+                                last_progress_time = time.time()
+                                
+                                if latest_msg.get('type') in ['complete', 'error']:
+                                    completed = True
                         
             except GeneratorExit:
-                pass
+                logger.info(f"客户端断开连接: {task_id}")
+            except Exception as e:
+                logger.error(f"进度监听错误: {e}")
+                yield f"data: {{\"type\": \"error\", \"error\": \"服务器错误\"}}\n\n"
             finally:
                 # 清理队列
                 if task_id in progress_queues:
                     del progress_queues[task_id]
                 logger.info(f"视频处理进度监听结束: {task_id}")
         
-        return Response(generate(), mimetype='text/event-stream')
+        response = Response(generate(), mimetype='text/event-stream')
+        response.headers['Cache-Control'] = 'no-cache'
+        response.headers['X-Accel-Buffering'] = 'no'  # 禁用Nginx缓存
+        return response
     
     @app.route('/api/extract_video_frame', methods=['POST'])
     def extract_video_frame():
@@ -1185,7 +1370,7 @@ def create_app():
                 Args:
                     progress_info: 包含详细进度信息的字典
                 """
-                # 构建详细的进度消息
+                # 获取进度信息
                 progress = progress_info.get('progress', 0)
                 current_frame = progress_info.get('current_frame', 0)
                 total_frames = progress_info.get('total_frames', 0)
@@ -1196,24 +1381,37 @@ def create_app():
                 elapsed_time = progress_info.get('elapsed_time', 0)
                 eta = progress_info.get('eta', 0)
                 memory_usage = progress_info.get('memory_usage', 0)
+                fps = progress_info.get('fps', 0)
+                processing_fps = progress_info.get('processing_fps', 0)
+                speed_ratio = progress_info.get('speed_ratio', 0)
+                frame_skip = progress_info.get('frame_skip', 1)
                 
                 # 格式化时间
-                elapsed_str = f"{int(elapsed_time // 60)}:{int(elapsed_time % 60):02d}"
-                eta_str = f"{int(eta // 60)}:{int(eta % 60):02d}" if eta > 0 else "未知"
+                elapsed_str = f"{int(elapsed_time // 3600)}:{int((elapsed_time % 3600) // 60):02d}:{int(elapsed_time % 60):02d}"
+                eta_str = f"{int(eta // 3600)}:{int((eta % 3600) // 60):02d}:{int(eta % 60):02d}" if eta > 0 else "计算中..."
                 
-                # 构建详细消息
-                message = (f"处理进度: {progress:.1f}% ({current_frame}/{total_frames}) | "
-                          f"已处理: {processed_frames} 帧 | "
-                          f"检测人脸: {faces_detected} | 识别: {faces_recognized} | "
-                          f"发现演员: {actors_found} 位 | "
-                          f"用时: {elapsed_str} | 剩余: {eta_str} | "
-                          f"内存: {memory_usage:.1%}")
+                # 计算剩余帧数和预估
+                remaining_frames = total_frames - current_frame
+                
+                # 构建更详细的消息
+                if speed_ratio > 0:
+                    speed_desc = f"{speed_ratio:.1f}x" if speed_ratio != 1.0 else "实时"
+                else:
+                    speed_desc = "计算中"
+                
+                message = (f"进度: {progress:.1f}% ({current_frame:,}/{total_frames:,}) | "
+                          f"处理: {processed_frames:,} 帧 | "
+                          f"人脸: {faces_detected}/{faces_recognized} | "
+                          f"演员: {actors_found} 位 | "
+                          f"速度: {speed_desc} | "
+                          f"用时: {elapsed_str} | 剩余: {eta_str}")
                 
                 progress_data = {
                     'type': 'progress',
                     'progress': progress,
                     'current_frame': current_frame,
                     'total_frames': total_frames,
+                    'remaining_frames': remaining_frames,
                     'processed_frames': processed_frames,
                     'faces_detected': faces_detected,
                     'faces_recognized': faces_recognized,
@@ -1221,13 +1419,25 @@ def create_app():
                     'elapsed_time': elapsed_time,
                     'eta': eta,
                     'memory_usage': memory_usage,
-                    'message': message
+                    'fps': fps,
+                    'processing_fps': processing_fps,
+                    'speed_ratio': speed_ratio,
+                    'frame_skip': frame_skip,
+                    'message': message,
+                    'timestamp': time.time()
                 }
                 
+                # 使用非阻塞方式放入队列，如果队列满了就替换最新的
                 try:
                     progress_queue.put(progress_data, block=False)
                 except queue.Full:
-                    pass  # 如果队列满了就跳过
+                    # 清空队列中的旧数据，只保留最新的
+                    try:
+                        while True:
+                            progress_queue.get_nowait()
+                    except queue.Empty:
+                        pass
+                    progress_queue.put(progress_data, block=False)
             
             # 检测视频时长并确定处理模式
             def get_video_duration_minutes(video_path):

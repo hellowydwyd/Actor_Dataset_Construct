@@ -575,3 +575,110 @@ class VectorDatabaseManager:
     def delete_face(self, face_id: str) -> bool:
         """删除人脸数据"""
         return self.database.delete_by_id(face_id)
+    
+    def delete_movie_data(self, movie_title: str) -> Dict[str, Any]:
+        """
+        删除指定电影的所有数据
+        
+        Args:
+            movie_title: 电影名称
+            
+        Returns:
+            删除统计信息
+        """
+        try:
+            deleted_faces = 0
+            deleted_actors = set()
+            keep_metadata = []
+            keep_embeddings = []
+            
+            # 找到要保留的数据
+            if hasattr(self.database, 'metadata'):
+                for i, meta in enumerate(self.database.metadata):
+                    meta_movie = meta.get('movie_title', '').strip()
+                    
+                    if meta_movie.lower() != movie_title.lower():
+                        # 保留非目标电影的数据
+                        keep_metadata.append(meta)
+                        if hasattr(self.database, 'index') and i < self.database.index.ntotal:
+                            # 获取对应的向量数据（这里简化处理，实际上faiss需要重建）
+                            keep_embeddings.append(i)
+                    else:
+                        # 记录被删除的数据
+                        deleted_faces += 1
+                        actor_name = meta.get('actor_name', '')
+                        if actor_name:
+                            deleted_actors.add(actor_name)
+            
+            if deleted_faces == 0:
+                logger.warning(f"未找到电影 '{movie_title}' 的数据")
+                return {
+                    'deleted_faces': 0,
+                    'deleted_actors': 0,
+                    'movie_title': movie_title,
+                    'found': False
+                }
+            
+            # 重建数据库（由于faiss的限制，需要重新创建索引）
+            if keep_metadata:
+                logger.info(f"开始重建向量索引，保留 {len(keep_metadata)} 条记录")
+                
+                # 获取要保留的向量数据
+                keep_embeddings = []
+                keep_indices = []
+                
+                # 从原始索引中提取要保留的向量
+                for i, meta in enumerate(self.database.metadata):
+                    meta_movie = meta.get('movie_title', '').strip()
+                    if meta_movie.lower() != movie_title.lower():
+                        # 保留非目标电影的向量
+                        if i < self.database.index.ntotal:
+                            # 从Faiss索引中获取向量
+                            vector = self.database.index.reconstruct(i)
+                            keep_embeddings.append(vector)
+                            keep_indices.append(i)
+                
+                # 创建新的索引并添加保留的向量
+                new_index = self.database._create_index()
+                if keep_embeddings:
+                    import numpy as np
+                    embeddings_array = np.array(keep_embeddings).astype('float32')
+                    new_index.add(embeddings_array)
+                    logger.info(f"重建索引完成，添加了 {len(keep_embeddings)} 个向量")
+                
+                # 重建ID映射
+                new_id_to_idx = {}
+                for i, meta in enumerate(keep_metadata):
+                    face_id = meta.get('face_id', '')
+                    if face_id:
+                        new_id_to_idx[face_id] = i
+                
+                # 更新数据库
+                self.database.index = new_index
+                self.database.metadata = keep_metadata
+                self.database.id_to_idx = new_id_to_idx
+                
+                logger.info(f"数据库重建完成: {len(keep_metadata)} 条元数据, {new_index.ntotal} 个向量")
+            else:
+                # 如果没有数据保留，创建空索引
+                self.database.index = self.database._create_index()
+                self.database.metadata = []
+                self.database.id_to_idx = {}
+                logger.info("创建空数据库")
+            
+            # 保存更新后的数据库
+            self.save_database()
+            
+            logger.info(f"成功删除电影 '{movie_title}' 的数据：{deleted_faces} 张人脸，{len(deleted_actors)} 位演员")
+            
+            return {
+                'deleted_faces': deleted_faces,
+                'deleted_actors': len(deleted_actors),
+                'deleted_actor_names': list(deleted_actors),
+                'movie_title': movie_title,
+                'found': True
+            }
+            
+        except Exception as e:
+            logger.error(f"删除电影数据失败: {e}")
+            raise e

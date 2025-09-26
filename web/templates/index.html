@@ -1027,13 +1027,22 @@
                             </div>
                         </div>
                         
-                        <div class="d-flex gap-2">
+                        <div class="d-flex gap-2 align-items-center">
                             <button type="button" class="btn btn-outline-secondary" id="search-movie-btn">
                                 <i class="bi bi-search"></i> 搜索电影
                             </button>
                             <button type="submit" class="btn btn-primary" id="build-btn">
                                 <i class="bi bi-play-fill"></i> 开始构建
                             </button>
+                            <div class="ms-3">
+                                <small class="text-muted">
+                                    <i class="bi bi-sliders"></i> 配置: 
+                                    <span id="current-face-config">最多5个人脸/演员</span>
+                                    <a href="#" onclick="showFaceConfig()" class="text-decoration-none ms-1" title="修改配置">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                </small>
+                            </div>
                         </div>
                     </form>
 
@@ -1256,12 +1265,105 @@
                         <!-- 结果显示区域 -->
                         <div class="col-md-6">
                             <!-- 处理状态 -->
-                            <div id="video-processing" class="text-center py-4" style="display: none;">
-                                <div class="loading-spinner"></div>
-                                <p class="mt-2 text-muted" id="processing-text">正在处理，请稍候...</p>
-                                <div class="progress mt-3" id="video-progress" style="display: none;">
-                                    <div class="progress-bar progress-bar-striped progress-bar-animated" 
-                                         role="progressbar" style="width: 0%" id="progress-bar"></div>
+                            <div id="video-processing" class="py-4" style="display: none;">
+                                <!-- 主进度条 -->
+                                <div class="mb-4">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h6 class="mb-0">视频处理进度</h6>
+                                        <span class="badge bg-primary" id="progress-percentage">0%</span>
+                                    </div>
+                                    <div class="progress mb-2" style="height: 8px;">
+                                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" 
+                                             role="progressbar" style="width: 0%" id="progress-bar"></div>
+                                    </div>
+                                    <div class="d-flex justify-content-between text-muted small">
+                                        <span id="frame-info">0 / 0 帧</span>
+                                        <span id="time-info">用时: 00:00:00 | 剩余: 计算中...</span>
+                                    </div>
+                                </div>
+
+                                <!-- 详细统计信息 -->
+                                <div class="row g-3 mb-4">
+                                    <div class="col-md-3">
+                                        <div class="card border-0 bg-light">
+                                            <div class="card-body p-3 text-center">
+                                                <i class="bi bi-camera-video text-primary fs-4"></i>
+                                                <div class="mt-2">
+                                                    <div class="fw-bold" id="processed-frames">0</div>
+                                                    <small class="text-muted">已处理帧</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card border-0 bg-light">
+                                            <div class="card-body p-3 text-center">
+                                                <i class="bi bi-person-bounding-box text-info fs-4"></i>
+                                                <div class="mt-2">
+                                                    <div class="fw-bold" id="faces-detected">0</div>
+                                                    <small class="text-muted">检测人脸</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card border-0 bg-light">
+                                            <div class="card-body p-3 text-center">
+                                                <i class="bi bi-check-circle text-success fs-4"></i>
+                                                <div class="mt-2">
+                                                    <div class="fw-bold" id="faces-recognized">0</div>
+                                                    <small class="text-muted">识别人脸</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card border-0 bg-light">
+                                            <div class="card-body p-3 text-center">
+                                                <i class="bi bi-star text-warning fs-4"></i>
+                                                <div class="mt-2">
+                                                    <div class="fw-bold" id="actors-found">0</div>
+                                                    <small class="text-muted">发现演员</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 性能指标 -->
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-4">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-speedometer2 me-2 text-primary"></i>
+                                            <div>
+                                                <div class="fw-bold" id="processing-speed">计算中</div>
+                                                <small class="text-muted">处理速度</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-memory me-2 text-info"></i>
+                                            <div>
+                                                <div class="fw-bold" id="memory-usage">0%</div>
+                                                <small class="text-muted">内存使用</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-play-circle me-2 text-success"></i>
+                                            <div>
+                                                <div class="fw-bold" id="fps-info">0 FPS</div>
+                                                <small class="text-muted">视频帧率</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 状态消息 -->
+                                <div class="text-center">
+                                    <p class="text-muted mb-0" id="processing-text">正在处理，请稍候...</p>
                                 </div>
                             </div>
                             
@@ -1369,6 +1471,10 @@
                                     <i class="bi bi-gear-fill"></i> 管理
                                 </button>
                                 <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="showFaceConfig()">
+                                        <i class="bi bi-sliders"></i> 人脸处理配置
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item" href="#" onclick="exportMetadata()">
                                         <i class="bi bi-download"></i> 导出Metadata文件
                                     </a></li>
@@ -1495,12 +1601,33 @@
                   loadVideoActors(),
                   loadFreeCrawlerStatus(),
                   loadMoviesList(),
-                  loadUploadConfig()
+                  loadUploadConfig(),
+                  loadFaceConfig()
               ]);
               console.log('初始数据加载完成');
             } catch (error) {
                 console.error('初始数据加载失败:', error);
                 showNotification('error', '初始数据加载失败，请刷新页面重试');
+            }
+        }
+
+        // 加载人脸配置信息
+        async function loadFaceConfig() {
+            try {
+                const response = await fetch('/api/face_config');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const config = data.config;
+                    const configText = `最多${config.max_faces_per_actor}个人脸/演员 (质量≥${config.min_face_score})`;
+                    
+                    const configSpan = document.getElementById('current-face-config');
+                    if (configSpan) {
+                        configSpan.textContent = configText;
+                    }
+                }
+            } catch (error) {
+                console.error('加载人脸配置失败:', error);
             }
         }
 
@@ -2551,15 +2678,27 @@
             }
             
             const moviesHtml = moviesStats.slice(0, 5).map(movie => `
-                <div class="movie-tag">
-                    ${movie.name} (${movie.character_count}个角色)
+                <div class="movie-item d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
+                    <div class="movie-info">
+                        <strong>${movie.name}</strong>
+                        <small class="text-muted d-block">${movie.character_count}个角色</small>
+                    </div>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteMovie('${movie.name}')" title="删除电影数据">
+                        <i class="bi bi-trash"></i>
+                    </button>
                 </div>
             `).join('');
             
             moviesPreviewDiv.innerHTML = moviesHtml;
             
             if (moviesStats.length > 5) {
-                moviesPreviewDiv.innerHTML += `<div class="movie-tag">+${moviesStats.length - 5} 更多...</div>`;
+                moviesPreviewDiv.innerHTML += `
+                    <div class="text-center mt-2">
+                        <button class="btn btn-sm btn-outline-primary" onclick="showAllMovies()">
+                            <i class="bi bi-list"></i> 查看全部 ${moviesStats.length} 部电影
+                        </button>
+                    </div>
+                `;
             }
         }
 
@@ -2921,6 +3060,260 @@
             } catch (error) {
                 console.error('清空数据库失败:', error);
                 showNotification('error', '清空失败，请检查网络连接');
+            }
+        }
+
+        // 删除电影数据库
+        async function deleteMovie(movieTitle) {
+            if (!confirm(`⚠️ 删除电影数据警告！\n\n确定要删除电影"${movieTitle}"的所有数据吗？\n\n此操作将删除：\n- 该电影的所有演员人脸数据\n- 相关图片文件\n- 颜色配置等metadata\n\n操作不可恢复！`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/delete_movie/${encodeURIComponent(movieTitle)}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const message = `电影"${movieTitle}"已删除\n\n删除统计：\n- ${data.deleted_faces} 张人脸\n- ${data.deleted_actors} 位演员\n- ${data.deleted_images} 张图片`;
+                    showNotification('success', message);
+                    
+                    // 重新加载数据
+                    setTimeout(() => {
+                        refreshAllData();
+                    }, 500);
+                } else {
+                    showNotification('error', '删除失败: ' + data.error);
+                }
+            } catch (error) {
+                console.error('删除电影数据失败:', error);
+                showNotification('error', '删除失败，请检查网络连接');
+            }
+        }
+
+        // 显示人脸处理配置
+        async function showFaceConfig() {
+            try {
+                // 获取当前配置
+                const response = await fetch('/api/face_config');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const config = data.config;
+                    
+                    // 创建配置模态框
+                    const modalHtml = `
+                        <div class="modal fade" id="faceConfigModal" tabindex="-1" aria-labelledby="faceConfigModalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="faceConfigModalLabel">
+                                            <i class="bi bi-sliders"></i> 人脸处理配置
+                                        </h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form id="faceConfigForm">
+                                            <div class="mb-3">
+                                                <label for="maxFacesInput" class="form-label">每个演员最大人脸向量数量</label>
+                                                <input type="number" class="form-control" id="maxFacesInput" 
+                                                       value="${config.max_faces_per_actor}" min="1" max="20">
+                                                <div class="form-text">建议值：3-10个。值越大质量越全面，但会增加存储空间。</div>
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <label for="minScoreInput" class="form-label">最低人脸检测分数</label>
+                                                <input type="number" class="form-control" id="minScoreInput" 
+                                                       value="${config.min_face_score}" min="0.1" max="1.0" step="0.1">
+                                                <div class="form-text">建议值：0.6-0.9。值越高质量越好，但可能遗漏一些人脸。</div>
+                                            </div>
+                                            
+                                            <div class="alert alert-info">
+                                                <h6><i class="bi bi-info-circle"></i> 当前配置信息</h6>
+                                                <ul class="mb-0">
+                                                    <li>模型: ${config.model_name}</li>
+                                                    <li>检测阈值: ${config.detection_threshold}</li>
+                                                    <li>向量维度: ${config.embedding_dim}</li>
+                                                    <li>人脸对齐: ${config.face_alignment ? '启用' : '禁用'}</li>
+                                                </ul>
+                                            </div>
+                                            
+                                            <div class="alert alert-warning">
+                                                <strong>注意：</strong>配置更改只对新构建的数据集生效，不会影响现有数据。
+                                            </div>
+                                        </form>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                                        <button type="button" class="btn btn-primary" onclick="saveFaceConfig()">
+                                            <i class="bi bi-check-lg"></i> 保存配置
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // 删除旧的模态框（如果存在）
+                    const existingModal = document.getElementById('faceConfigModal');
+                    if (existingModal) {
+                        existingModal.remove();
+                    }
+                    
+                    // 添加新的模态框到页面
+                    document.body.insertAdjacentHTML('beforeend', modalHtml);
+                    
+                    // 显示模态框
+                    const modal = new bootstrap.Modal(document.getElementById('faceConfigModal'));
+                    modal.show();
+                    
+                    // 模态框关闭时清理DOM
+                    document.getElementById('faceConfigModal').addEventListener('hidden.bs.modal', function () {
+                        this.remove();
+                    });
+                    
+                } else {
+                    showNotification('error', '获取配置失败: ' + data.error);
+                }
+            } catch (error) {
+                console.error('获取人脸配置失败:', error);
+                showNotification('error', '获取配置失败，请检查网络连接');
+            }
+        }
+
+        // 保存人脸配置
+        async function saveFaceConfig() {
+            try {
+                const maxFaces = parseInt(document.getElementById('maxFacesInput').value);
+                const minScore = parseFloat(document.getElementById('minScoreInput').value);
+                
+                // 验证输入
+                if (isNaN(maxFaces) || maxFaces < 1 || maxFaces > 20) {
+                    showNotification('error', '每个演员最大人脸向量数量必须是1-20之间的整数');
+                    return;
+                }
+                
+                if (isNaN(minScore) || minScore < 0.1 || minScore > 1.0) {
+                    showNotification('error', '最低人脸检测分数必须是0.1-1.0之间的数值');
+                    return;
+                }
+                
+                const response = await fetch('/api/face_config', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        max_faces_per_actor: maxFaces,
+                        min_face_score: minScore
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification('success', '人脸处理配置已更新');
+                    
+                    // 更新页面显示的配置信息
+                    const config = data.config;
+                    const configText = `最多${config.max_faces_per_actor}个人脸/演员 (质量≥${config.min_face_score})`;
+                    const configSpan = document.getElementById('current-face-config');
+                    if (configSpan) {
+                        configSpan.textContent = configText;
+                    }
+                    
+                    // 关闭模态框
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('faceConfigModal'));
+                    if (modal) {
+                        modal.hide();
+                    }
+                } else {
+                    showNotification('error', '保存配置失败: ' + data.error);
+                }
+                
+            } catch (error) {
+                console.error('保存人脸配置失败:', error);
+                showNotification('error', '保存配置失败，请检查网络连接');
+            }
+        }
+
+        // 显示全部电影列表
+        async function showAllMovies() {
+            try {
+                const response = await fetch('/api/get_movies');
+                const data = await response.json();
+                
+                if (data.success && data.movies.length > 0) {
+                    // 创建模态框内容
+                    const moviesList = data.movies.map(movie => `
+                        <div class="movie-item d-flex justify-content-between align-items-center mb-3 p-3 border rounded">
+                            <div class="movie-info">
+                                <h6 class="mb-1">${movie.title}</h6>
+                                <small class="text-muted">
+                                    <i class="bi bi-people"></i> ${movie.actor_count} 位演员 | 
+                                    <i class="bi bi-camera"></i> ${movie.face_count} 张人脸
+                                </small>
+                                ${movie.actors.length > 0 ? `
+                                    <div class="mt-1">
+                                        <small class="text-info">演员: ${movie.actors.slice(0, 3).join(', ')}${movie.actors.length > 3 ? '...' : ''}</small>
+                                    </div>
+                                ` : ''}
+                            </div>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteMovie('${movie.title}')" title="删除电影数据">
+                                <i class="bi bi-trash"></i> 删除
+                            </button>
+                        </div>
+                    `).join('');
+                    
+                    // 显示模态框
+                    const modalHtml = `
+                        <div class="modal fade" id="allMoviesModal" tabindex="-1" aria-labelledby="allMoviesModalLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="allMoviesModalLabel">
+                                            <i class="bi bi-film"></i> 全部电影数据库 (${data.movies.length} 部)
+                                        </h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
+                                        ${moviesList}
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                                        <button type="button" class="btn btn-warning" onclick="clearDatabase()">
+                                            <i class="bi bi-trash-fill"></i> 清空整个数据库
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // 删除旧的模态框（如果存在）
+                    const existingModal = document.getElementById('allMoviesModal');
+                    if (existingModal) {
+                        existingModal.remove();
+                    }
+                    
+                    // 添加新的模态框到页面
+                    document.body.insertAdjacentHTML('beforeend', modalHtml);
+                    
+                    // 显示模态框
+                    const modal = new bootstrap.Modal(document.getElementById('allMoviesModal'));
+                    modal.show();
+                    
+                    // 模态框关闭时清理DOM
+                    document.getElementById('allMoviesModal').addEventListener('hidden.bs.modal', function () {
+                        this.remove();
+                    });
+                    
+                } else {
+                    showNotification('info', '暂无电影数据');
+                }
+            } catch (error) {
+                console.error('加载电影列表失败:', error);
+                showNotification('error', '加载失败，请检查网络连接');
             }
         }
 
@@ -3496,14 +3889,18 @@
             const processingDiv = document.getElementById('video-processing');
             const resultsDiv = document.getElementById('video-results');
             const progressBar = document.getElementById('progress-bar');
-            const progressDiv = document.getElementById('video-progress');
             const processingText = document.getElementById('processing-text');
+
+            // 检查所有必需的元素是否存在
+            if (!processBtn || !processingDiv || !resultsDiv || !progressBar || !processingText) {
+                showNotification('error', '页面元素未正确加载，请刷新页面重试');
+                return;
+            }
 
             // 显示处理状态
             processBtn.disabled = true;
             processBtn.innerHTML = '<div class="loading-spinner"></div> 处理中...';
             processingDiv.style.display = 'block';
-            progressDiv.style.display = 'block';
             resultsDiv.style.display = 'none';
             processingText.textContent = '正在处理视频，请耐心等待...';
 
@@ -3545,6 +3942,81 @@
             }
         }
         
+        // 更新详细进度信息
+        function updateDetailedProgress(data) {
+            // 更新百分比显示
+            const progressPercentage = document.getElementById('progress-percentage');
+            if (progressPercentage) {
+                progressPercentage.textContent = `${data.progress.toFixed(1)}%`;
+            }
+            
+            // 更新帧信息
+            const frameInfo = document.getElementById('frame-info');
+            if (frameInfo) {
+                frameInfo.textContent = `${data.current_frame.toLocaleString()} / ${data.total_frames.toLocaleString()} 帧`;
+            }
+            
+            // 更新时间信息
+            const timeInfo = document.getElementById('time-info');
+            if (timeInfo) {
+                const elapsedTime = formatTime(data.elapsed_time);
+                const etaTime = data.eta > 0 ? formatTime(data.eta) : '计算中...';
+                timeInfo.textContent = `用时: ${elapsedTime} | 剩余: ${etaTime}`;
+            }
+            
+            // 更新统计信息
+            const processedFrames = document.getElementById('processed-frames');
+            if (processedFrames) {
+                processedFrames.textContent = data.processed_frames.toLocaleString();
+            }
+            
+            const facesDetected = document.getElementById('faces-detected');
+            if (facesDetected) {
+                facesDetected.textContent = data.faces_detected.toLocaleString();
+            }
+            
+            const facesRecognized = document.getElementById('faces-recognized');
+            if (facesRecognized) {
+                facesRecognized.textContent = data.faces_recognized.toLocaleString();
+            }
+            
+            const actorsFound = document.getElementById('actors-found');
+            if (actorsFound) {
+                actorsFound.textContent = data.actors_found;
+            }
+            
+            // 更新性能指标
+            const processingSpeed = document.getElementById('processing-speed');
+            if (processingSpeed && data.speed_ratio !== undefined) {
+                if (data.speed_ratio > 0) {
+                    processingSpeed.textContent = `${data.speed_ratio.toFixed(1)}x 速度`;
+                } else {
+                    processingSpeed.textContent = '计算中';
+                }
+            }
+            
+            const memoryUsage = document.getElementById('memory-usage');
+            if (memoryUsage && data.memory_usage !== undefined) {
+                memoryUsage.textContent = `${(data.memory_usage * 100).toFixed(1)}%`;
+            }
+            
+            const fpsInfo = document.getElementById('fps-info');
+            if (fpsInfo && data.fps !== undefined) {
+                fpsInfo.textContent = `${data.fps.toFixed(1)} FPS`;
+            }
+        }
+        
+        // 格式化时间（秒转换为HH:MM:SS）
+        function formatTime(seconds) {
+            if (!seconds || seconds <= 0) return '00:00:00';
+            
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = Math.floor(seconds % 60);
+            
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+        
         // 监听视频处理进度
         function monitorVideoProgress(taskId, processBtn, processingDiv, resultsDiv, progressBar, processingText) {
             const eventSource = new EventSource(`/api/video_progress/${taskId}`);
@@ -3559,7 +4031,10 @@
                         progressBar.style.width = `${data.progress}%`;
                         progressBar.setAttribute('aria-valuenow', data.progress);
                         
-                        // 更新进度文字
+                        // 更新详细进度信息
+                        updateDetailedProgress(data);
+                        
+                        // 更新主要状态文字
                         processingText.textContent = data.message;
                         
                     } else if (data.type === 'complete') {
@@ -3620,6 +4095,12 @@
             const processBtn = document.getElementById('process-frame-btn');
             const processingDiv = document.getElementById('video-processing');
             const resultsDiv = document.getElementById('video-results');
+
+            // 检查所有必需的元素是否存在
+            if (!processBtn || !processingDiv || !resultsDiv) {
+                showNotification('error', '页面元素未正确加载，请刷新页面重试');
+                return;
+            }
 
             // 显示处理状态
             processBtn.disabled = true;

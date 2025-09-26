@@ -116,6 +116,51 @@ class ConfigLoader:
                 logging_config['file'] = str(project_root / log_path)
                 
         return logging_config
+    
+    def update_config(self, key_path: str, value) -> bool:
+        """
+        更新配置值并保存到文件
+        
+        Args:
+            key_path: 配置键路径，如 'face_recognition.max_faces_per_actor'
+            value: 新的配置值
+            
+        Returns:
+            是否成功更新
+        """
+        try:
+            # 解析键路径
+            keys = key_path.split('.')
+            
+            # 在内存中更新配置
+            current_dict = self.config
+            for key in keys[:-1]:
+                if key not in current_dict:
+                    current_dict[key] = {}
+                current_dict = current_dict[key]
+            
+            # 设置最终值
+            current_dict[keys[-1]] = value
+            
+            # 保存到文件
+            return self.save_config()
+            
+        except Exception as e:
+            print(f"更新配置失败 {key_path}={value}: {e}")
+            return False
+    
+    def save_config(self) -> bool:
+        """保存配置到文件"""
+        try:
+            with open(self.config_path, 'w', encoding='utf-8') as f:
+                yaml.dump(self.config, f, default_flow_style=False, 
+                         allow_unicode=True, indent=2)
+            print(f"配置已保存到: {self.config_path}")
+            return True
+            
+        except Exception as e:
+            print(f"保存配置文件失败: {e}")
+            return False
 
 
 # 全局配置实例

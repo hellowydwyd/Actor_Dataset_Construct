@@ -119,6 +119,29 @@ class VideoFaceRecognizer:
             logger.warning(f"无法获取内存信息: {e}")
             return 0.5  # 返回保守值
     
+    def _get_system_stats(self) -> Dict[str, Any]:
+        """获取详细的系统性能统计信息"""
+        try:
+            memory_info = psutil.virtual_memory()
+            cpu_percent = psutil.cpu_percent(interval=None)
+            
+            return {
+                'memory_usage': memory_info.percent / 100.0,
+                'memory_available_gb': memory_info.available / (1024**3),
+                'memory_total_gb': memory_info.total / (1024**3),
+                'cpu_usage': cpu_percent / 100.0,
+                'cpu_count': psutil.cpu_count()
+            }
+        except Exception as e:
+            logger.warning(f"获取系统统计信息失败: {e}")
+            return {
+                'memory_usage': 0.5,
+                'memory_available_gb': 8.0,
+                'memory_total_gb': 16.0,
+                'cpu_usage': 0.3,
+                'cpu_count': 4
+            }
+    
     def _should_gc_collect(self, force: bool = False) -> bool:
         """判断是否应该进行垃圾回收"""
         if force:
@@ -668,16 +691,25 @@ class VideoFaceRecognizer:
                 if writer:
                     writer.write(frame)
                 
-                # 更频繁的进度回调和检查点保存
+                # 智能进度更新策略 - 根据视频长度动态调整更新频率
+                progress_interval = max(1, min(int(fps * 3), 150))  # 3秒或150帧，取较小值
+                percentage_interval = max(0.5, 100 / total_frames * 50)  # 至少每0.5%更新一次
+                
+                progress = frame_count / total_frames * 100
                 should_update_progress = (
-                    frame_count % max(1, int(fps * 5)) == 0 or  # 每5秒更新一次进度
-                    frame_count % 100 == 0  # 或者每100帧更新一次
+                    frame_count % progress_interval == 0 or  # 按时间间隔
+                    progress - getattr(self, '_last_progress', 0) >= percentage_interval or  # 按百分比间隔
+                    frame_count == total_frames  # 最后一帧
                 )
                 
                 if should_update_progress:
-                    progress = frame_count / total_frames * 100
                     elapsed_time = time.time() - start_time
-                    eta = (elapsed_time / (frame_count - start_frame + 1)) * (total_frames - frame_count)
+                    processed_rate = (frame_count - start_frame + 1) / elapsed_time if elapsed_time > 0 else 0
+                    eta = (total_frames - frame_count) / processed_rate if processed_rate > 0 else 0
+                    
+                    # 计算处理速度 (帧/秒)
+                    current_fps = processed_rate
+                    processing_speed_ratio = current_fps / fps if fps > 0 else 0
                     
                     # 调用进度回调函数
                     if progress_callback:
@@ -692,9 +724,15 @@ class VideoFaceRecognizer:
                             'elapsed_time': elapsed_time,
                             'eta': eta,
                             'fps': fps,
-                            'memory_usage': self._check_memory_usage()
+                            'processing_fps': current_fps,
+                            'speed_ratio': processing_speed_ratio,
+                            'memory_usage': self._check_memory_usage(),
+                            'frame_skip': frame_skip
                         }
                         progress_callback(progress_info)
+                    
+                    # 记录最后更新的进度
+                    self._last_progress = progress
                     
                     # 每30秒显示详细日志
                     if frame_count % max(1, int(fps * 30)) == 0:
@@ -963,7 +1001,25 @@ class VideoFaceRecognizer:
                                   f"用时: {elapsed_time:.0f}s 预计剩余: {eta:.0f}s")
                         
                         if progress_callback:
-                            progress_callback(progress, frame_count, total_frames)
+                            # 为并行处理模式提供更详细的进度信息
+                            progress_info = {
+                                'progress': progress,
+                                'current_frame': frame_count,
+                                'total_frames': total_frames,
+                                'processed_frames': frame_count,
+                                'faces_detected': 0,  # 并行模式暂时无法统计
+                                'faces_recognized': 0,  # 并行模式暂时无法统计
+                                'actors_found': 0,  # 并行模式暂时无法统计
+                                'elapsed_time': elapsed_time,
+                                'eta': eta,
+                                'fps': fps,
+                                'processing_fps': frame_count / elapsed_time if elapsed_time > 0 else 0,
+                                'speed_ratio': (frame_count / elapsed_time) / fps if elapsed_time > 0 and fps > 0 else 0,
+                                'memory_usage': self._check_memory_usage(),
+                                'frame_skip': 1,
+                                'processing_mode': 'parallel'
+                            }
+                            progress_callback(progress_info)
                 
                 # 发送结束信号
                 for _ in range(max_workers):

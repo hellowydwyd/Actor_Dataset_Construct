@@ -142,8 +142,8 @@ class ActorDatasetBuilder:
                     face_id = f"{movie_title}_{character_name}_{face['face_id']}_{hash(face['image_path']) % 10000}"
                     face['face_id'] = face_id
                 
-                # 筛选最佳人脸
-                best_faces = self.face_processor.filter_best_faces(faces, max_faces=5)
+                # 筛选最佳人脸（使用配置项）
+                best_faces = self.face_processor.filter_best_faces(faces)
                 all_faces.extend(best_faces)
                 
                 logger.info(f"从 {actor_name} 的图片中提取 {len(best_faces)} 张高质量人脸")

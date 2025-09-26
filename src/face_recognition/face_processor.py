@@ -28,6 +28,10 @@ class FaceProcessor:
         self.embedding_dim = self.face_config.get('embedding_dim', 512)
         self.face_alignment = self.face_config.get('face_alignment', True)
         
+        # 新增的配置项
+        self.max_faces_per_actor = self.face_config.get('max_faces_per_actor', 5)
+        self.min_face_score = self.face_config.get('min_face_score', 0.8)
+        
         # 初始化InsightFace应用
         self.app = None
         self._init_face_analysis()
@@ -339,18 +343,24 @@ class FaceProcessor:
             return 0.0
     
     def filter_best_faces(self, faces: List[Dict[str, Any]], 
-                         max_faces: int = 5, min_score: float = 0.8) -> List[Dict[str, Any]]:
+                         max_faces: int = None, min_score: float = None) -> List[Dict[str, Any]]:
         """
         筛选最佳人脸
         
         Args:
             faces: 人脸信息列表
-            max_faces: 最大保留人脸数量
-            min_score: 最低检测分数
+            max_faces: 最大保留人脸数量（None时使用配置值）
+            min_score: 最低检测分数（None时使用配置值）
             
         Returns:
             筛选后的人脸列表
         """
+        # 使用配置项作为默认值
+        if max_faces is None:
+            max_faces = self.max_faces_per_actor
+        if min_score is None:
+            min_score = self.min_face_score
+        
         # 过滤低质量人脸
         filtered_faces = [face for face in faces if face['det_score'] >= min_score]
         
@@ -375,5 +385,16 @@ class FaceProcessor:
             if len(final_faces) >= max_faces:
                 break
         
-        logger.info(f"从 {len(faces)} 张人脸中筛选出 {len(final_faces)} 张最佳人脸")
+        logger.info(f"从 {len(faces)} 张人脸中筛选出 {len(final_faces)} 张最佳人脸 (最大限制: {max_faces}, 分数阈值: {min_score})")
         return final_faces
+    
+    def get_face_config(self) -> Dict[str, Any]:
+        """获取人脸处理配置信息"""
+        return {
+            'max_faces_per_actor': self.max_faces_per_actor,
+            'min_face_score': self.min_face_score,
+            'detection_threshold': self.detection_threshold,
+            'model_name': self.model_name,
+            'embedding_dim': self.embedding_dim,
+            'face_alignment': self.face_alignment
+        }
