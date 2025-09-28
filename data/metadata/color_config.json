@@ -1516,6 +1516,193 @@
       "shape_type": "rectangle",
       "created_at": "",
       "updated_at": ""
+    },
+    "教父": {
+      "characters": {
+        "Don Vito Corleone": {
+          "character_name": "Don Vito Corleone",
+          "color_bgr": [
+            0,
+            255,
+            0
+          ],
+          "color_rgb": [
+            0,
+            255,
+            0
+          ],
+          "color_hex": "#00ff00",
+          "color_index": 0,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 0
+        },
+        "Michael Corleone": {
+          "character_name": "Michael Corleone",
+          "color_bgr": [
+            255,
+            0,
+            0
+          ],
+          "color_rgb": [
+            0,
+            0,
+            255
+          ],
+          "color_hex": "#0000ff",
+          "color_index": 1,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 1
+        },
+        "Sonny Corleone": {
+          "character_name": "Sonny Corleone",
+          "color_bgr": [
+            0,
+            165,
+            255
+          ],
+          "color_rgb": [
+            255,
+            165,
+            0
+          ],
+          "color_hex": "#ffa500",
+          "color_index": 2,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 2
+        },
+        "Tom Hagen": {
+          "character_name": "Tom Hagen",
+          "color_bgr": [
+            255,
+            255,
+            0
+          ],
+          "color_rgb": [
+            0,
+            255,
+            255
+          ],
+          "color_hex": "#00ffff",
+          "color_index": 3,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 3
+        },
+        "Clemenza": {
+          "character_name": "Clemenza",
+          "color_bgr": [
+            255,
+            0,
+            255
+          ],
+          "color_rgb": [
+            255,
+            0,
+            255
+          ],
+          "color_hex": "#ff00ff",
+          "color_index": 4,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 4
+        },
+        "Kay Adams": {
+          "character_name": "Kay Adams",
+          "color_bgr": [
+            0,
+            255,
+            255
+          ],
+          "color_rgb": [
+            255,
+            255,
+            0
+          ],
+          "color_hex": "#ffff00",
+          "color_index": 5,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 5
+        },
+        "Connie Corleone Rizzi": {
+          "character_name": "Connie Corleone Rizzi",
+          "color_bgr": [
+            128,
+            0,
+            128
+          ],
+          "color_rgb": [
+            128,
+            0,
+            128
+          ],
+          "color_hex": "#800080",
+          "color_index": 6,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 6
+        },
+        "Carlo Rizzi": {
+          "character_name": "Carlo Rizzi",
+          "color_bgr": [
+            255,
+            165,
+            0
+          ],
+          "color_rgb": [
+            0,
+            165,
+            255
+          ],
+          "color_hex": "#00a5ff",
+          "color_index": 7,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 7
+        },
+        "Captain McCluskey": {
+          "character_name": "Captain McCluskey",
+          "color_bgr": [
+            0,
+            128,
+            255
+          ],
+          "color_rgb": [
+            255,
+            128,
+            0
+          ],
+          "color_hex": "#ff8000",
+          "color_index": 8,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 8
+        },
+        "Jack Woltz": {
+          "character_name": "Jack Woltz",
+          "color_bgr": [
+            255,
+            20,
+            147
+          ],
+          "color_rgb": [
+            147,
+            20,
+            255
+          ],
+          "color_hex": "#9314ff",
+          "color_index": 9,
+          "shape_type": "rectangle",
+          "line_thickness": 2,
+          "priority": 9
+        }
+      },
+      "shape_type": "rectangle",
+      "created_at": "",
+      "updated_at": ""
     }
   },
   "global_settings": {
