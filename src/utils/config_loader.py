@@ -104,6 +104,10 @@ class ConfigLoader:
         """获取Web配置"""
         return self.get('web', {})
     
+    def get_video_processing_config(self) -> Dict[str, Any]:
+        """获取视频处理配置"""
+        return self.get('video_processing', {})
+    
     def get_logging_config(self) -> Dict[str, Any]:
         """获取日志配置"""
         logging_config = self.get('logging', {})

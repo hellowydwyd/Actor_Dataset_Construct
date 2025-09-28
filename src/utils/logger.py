@@ -35,14 +35,23 @@ def setup_logger():
         log_path = Path(log_file)
         log_path.parent.mkdir(parents=True, exist_ok=True)
         
-        logger.add(
-            sink=log_file,
-            level=log_level,
-            format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}",
-            rotation=logging_config.get('max_size', '10MB'),
-            retention=logging_config.get('backup_count', 5),
-            encoding='utf-8'
-        )
+        try:
+            logger.add(
+                sink=log_file,
+                level=log_level,
+                format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}",
+                rotation=logging_config.get('rotation', logging_config.get('max_size', '10MB')),
+                retention=logging_config.get('retention', f"{logging_config.get('backup_count', 5)} days"),
+                encoding='utf-8-sig',  # 使用带BOM的UTF-8，确保Windows兼容性
+                enqueue=True,  # 启用异步日志写入
+                catch=True,    # 捕获日志记录错误
+                backtrace=True,  # 启用回溯信息
+                diagnose=True    # 启用诊断信息
+            )
+        except Exception as e:
+            # 如果文件日志失败，至少保证控制台日志正常工作
+            print(f"警告：文件日志初始化失败: {e}")
+            print("将仅使用控制台日志输出")
     
     return logger
 

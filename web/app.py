@@ -1343,6 +1343,7 @@ def create_app():
             # 获取电影范围和相似度参数
             movie_title = request.form.get('movie_title', '').strip()
             similarity_threshold = float(request.form.get('similarity_threshold', 0.6))
+            annotation_frame_interval = int(request.form.get('annotation_frame_interval', 1))
             
             # 获取长视频处理参数
             processing_mode = request.form.get('processing_mode', 'auto')  # auto, standard, long_video, parallel
@@ -1484,7 +1485,8 @@ def create_app():
                         similarity_threshold=similarity_threshold,
                         movie_title=movie_title if movie_title else None,
                         long_video_mode=long_video_mode,
-                        max_memory_usage=max_memory_usage
+                        max_memory_usage=max_memory_usage,
+                        annotation_frame_interval=annotation_frame_interval
                     )
                     
                     if movie_title:
@@ -1493,7 +1495,7 @@ def create_app():
                         logger.info("使用全库视频处理")
                     
                     logger.info(f"处理配置: 模式={final_mode}, 长视频模式={'启用' if long_video_mode else '禁用'}, "
-                              f"最大内存使用率={max_memory_usage:.1%}")
+                              f"最大内存使用率={max_memory_usage:.1%}, 标注间隔={annotation_frame_interval}帧")
                     
                     # 根据模式选择处理方法
                     if final_mode == 'parallel':

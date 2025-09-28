@@ -1248,6 +1248,21 @@
                                     </div>
                                 </div>
                                 
+                                <div class="mb-3">
+                                    <label for="annotation-interval" class="form-label">标注间隔 
+                                        <i class="bi bi-info-circle" data-bs-toggle="tooltip" 
+                                           title="控制每隔多少帧进行一次人脸标注，数值越大处理速度越快但标注密度越低"></i>
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="range" class="form-range" id="annotation-interval" 
+                                               min="1" max="10" step="1" value="1">
+                                        <span class="input-group-text" id="interval-value">每帧标注</span>
+                                    </div>
+                                    <div class="form-text">
+                                        <span class="text-info">性能优化：</span>间隔越大处理速度越快，但标注会更稀疏。建议值：1-3
+                                    </div>
+                                </div>
+                                
                                 <div class="d-grid">
                                     <button type="submit" class="btn btn-dark" id="process-btn">
                                         <i class="bi bi-film"></i> <span id="process-btn-text">处理视频</span>
@@ -1723,6 +1738,11 @@
                 const similarityThreshold = document.getElementById('similarity-threshold');
                 if (similarityThreshold) {
                     similarityThreshold.addEventListener('input', updateThresholdValue);
+                }
+                
+                const annotationInterval = document.getElementById('annotation-interval');
+                if (annotationInterval) {
+                    annotationInterval.addEventListener('input', updateIntervalValue);
                 }
                 
                 
@@ -3574,6 +3594,17 @@
             document.getElementById('threshold-value').textContent = threshold;
         }
 
+        // 更新标注间隔显示
+        function updateIntervalValue() {
+            const interval = document.getElementById('annotation-interval').value;
+            const intervalDisplay = document.getElementById('interval-value');
+            if (interval == 1) {
+                intervalDisplay.textContent = '每帧标注';
+            } else {
+                intervalDisplay.textContent = `每${interval}帧标注1次`;
+            }
+        }
+
         // 文件类型检查（不再预览视频帧）
         function checkFileType(event) {
             const file = event.target.files[0];
@@ -3907,14 +3938,16 @@
             const formData = new FormData();
             formData.append('video', file);
             
-            // 添加电影范围和相似度参数
+            // 添加电影范围、相似度和标注间隔参数
             const movieScope = document.getElementById('movie-scope').value;
             const similarityThreshold = document.getElementById('similarity-threshold').value;
+            const annotationInterval = document.getElementById('annotation-interval').value;
             
             if (movieScope) {
                 formData.append('movie_title', movieScope);
             }
             formData.append('similarity_threshold', similarityThreshold);
+            formData.append('annotation_frame_interval', annotationInterval);
 
             try {
                 const response = await fetch('/api/process_video', {

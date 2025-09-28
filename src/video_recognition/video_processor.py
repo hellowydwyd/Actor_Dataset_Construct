@@ -26,7 +26,8 @@ class VideoFaceRecognizer:
     """视频人脸识别器"""
     
     def __init__(self, similarity_threshold: float = 0.6, movie_title: str = None,
-                 long_video_mode: bool = False, max_memory_usage: float = 0.8):
+                 long_video_mode: bool = False, max_memory_usage: float = 0.8,
+                 annotation_frame_interval: int = 1):
         """
         初始化视频人脸识别器
         
@@ -35,11 +36,13 @@ class VideoFaceRecognizer:
             movie_title: 目标电影名称，如果指定则只在该电影演员范围内识别
             long_video_mode: 是否启用长视频模式（内存优化）
             max_memory_usage: 最大内存使用率（0.0-1.0）
+            annotation_frame_interval: 标注间隔（每隔多少帧进行一次人脸标注）
         """
         self.similarity_threshold = similarity_threshold
         self.movie_title = movie_title
         self.long_video_mode = long_video_mode
         self.max_memory_usage = max_memory_usage
+        self.annotation_frame_interval = max(1, annotation_frame_interval)  # 确保至少为1
         
         # 长视频处理相关配置
         self.chunk_size = 300 if long_video_mode else 1000  # 分块处理的帧数
@@ -671,21 +674,30 @@ class VideoFaceRecognizer:
                             stats['memory_warnings'] += 1
                             logger.warning(f"内存使用率过高: {memory_usage:.1%}")
                 
-                # 识别人脸
-                recognition_results = self.recognize_faces_in_frame(frame)
+                # 根据标注间隔决定是否进行人脸识别和标注
+                should_annotate = (frame_count % self.annotation_frame_interval == 0)
                 
-                # 更新统计
+                if should_annotate:
+                    # 识别人脸
+                    recognition_results = self.recognize_faces_in_frame(frame)
+                    
+                    # 更新统计
+                    stats['faces_detected'] += len(recognition_results)
+                    
+                    for result in recognition_results:
+                        if result['recognized']:
+                            stats['faces_recognized'] += 1
+                            stats['actors_found'].add(result['actor_name'])
+                    
+                    # 绘制标注
+                    if recognition_results:
+                        frame = self.draw_face_annotations(frame, recognition_results)
+                else:
+                    # 不进行识别，但仍然统计处理的帧数
+                    recognition_results = []
+                
+                # 更新处理帧数统计
                 stats['processed_frames'] += 1
-                stats['faces_detected'] += len(recognition_results)
-                
-                for result in recognition_results:
-                    if result['recognized']:
-                        stats['faces_recognized'] += 1
-                        stats['actors_found'].add(result['actor_name'])
-                
-                # 绘制标注
-                if recognition_results:
-                    frame = self.draw_face_annotations(frame, recognition_results)
                 
                 # 写入输出视频
                 if writer:
@@ -959,12 +971,20 @@ class VideoFaceRecognizer:
                             writer.write(frame)
                         continue
                     
-                    # 将帧加入处理队列
-                    try:
-                        frame_queue.put((frame_count, frame.copy()), timeout=2.0)
-                    except queue.Full:
-                        logger.warning("帧队列已满，跳过当前帧")
-                        continue
+                    # 根据标注间隔决定是否进行处理
+                    should_annotate = (frame_count % self.annotation_frame_interval == 0)
+                    
+                    if should_annotate:
+                        # 将帧加入处理队列
+                        try:
+                            frame_queue.put((frame_count, frame.copy()), timeout=2.0)
+                        except queue.Full:
+                            logger.warning("帧队列已满，跳过当前帧")
+                            continue
+                    else:
+                        # 不进行识别处理，直接写入原始帧
+                        if writer:
+                            writer.write(frame)
                     
                     # 处理已完成的结果
                     while not result_queue.empty():

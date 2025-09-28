@@ -68,19 +68,21 @@ class VectorDatabaseInterface(ABC):
 class FaissVectorDatabase(VectorDatabaseInterface):
     """Faiss向量数据库实现"""
     
-    def __init__(self, dimension: int = 512, index_type: str = "IVF"):
+    def __init__(self, dimension: int = 512, index_type: str = "IVF", use_gpu: bool = False):
         """
         初始化Faiss向量数据库
         
         Args:
             dimension: 向量维度
             index_type: 索引类型 (Flat, IVF, HNSW)
+            use_gpu: 是否使用GPU加速
         """
         if not FAISS_AVAILABLE:
-            raise ImportError("Faiss未安装，请运行: pip install faiss-cpu")
+            raise ImportError("Faiss未安装，请运行: pip install faiss-cpu 或 faiss-gpu")
         
         self.dimension = dimension
         self.index_type = index_type
+        self.use_gpu = use_gpu
         
         # 初始化索引
         self.index = self._create_index()
@@ -114,7 +116,22 @@ class FaissVectorDatabase(VectorDatabaseInterface):
             logger.warning(f"未知索引类型 {self.index_type}，使用Flat索引")
             index = faiss.IndexFlatIP(self.dimension)
         
-        logger.info(f"创建Faiss索引: {type(index).__name__}")
+        # 如果启用GPU，将索引移到GPU上
+        if self.use_gpu:
+            try:
+                # 检查GPU是否可用
+                if faiss.get_num_gpus() > 0:
+                    logger.info("检测到GPU，将索引移至GPU")
+                    res = faiss.StandardGpuResources()  # 使用标准GPU资源
+                    index = faiss.index_cpu_to_gpu(res, 0, index)  # 移至GPU 0
+                    logger.info(f"成功创建GPU加速的Faiss索引: {type(index).__name__}")
+                else:
+                    logger.warning("未检测到可用GPU，使用CPU索引")
+            except Exception as e:
+                logger.warning(f"GPU初始化失败，回退到CPU: {e}")
+        else:
+            logger.info(f"创建CPU Faiss索引: {type(index).__name__}")
+        
         return index
     
     def add_embeddings(self, embeddings: List[np.ndarray], metadata: List[Dict[str, Any]]) -> bool:
@@ -462,7 +479,8 @@ class VectorDatabaseManager:
         if self.db_type == 'faiss':
             dimension = self.vector_config.get('dimension', 512)
             index_type = self.vector_config.get('index_type', 'IVF')
-            self.database = FaissVectorDatabase(dimension=dimension, index_type=index_type)
+            use_gpu = self.vector_config.get('use_gpu', False)
+            self.database = FaissVectorDatabase(dimension=dimension, index_type=index_type, use_gpu=use_gpu)
         elif self.db_type == 'chromadb':
             collection_name = self.vector_config.get('chromadb', {}).get('collection_name', 'actor_faces')
             self.database = ChromaVectorDatabase(collection_name=collection_name)

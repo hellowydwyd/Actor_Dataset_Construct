@@ -1,5 +1,5 @@
 crawler:
-  concurrent_downloads: 3
+  concurrent_downloads: 6
   download_timeout: 30
 deduplication:
   enable_face_clustering: true
@@ -17,6 +17,8 @@ logging:
   file: D:\DEVELOPE\Actor_dataset_contruct\logs\system.log
   level: INFO
   max_size: 10MB
+  rotation: "10 MB"
+  retention: "7 days"
 storage:
   database_file: ./data/metadata/actors.db
   embeddings_dir: D:\DEVELOPE\Actor_dataset_contruct\data\embeddings
@@ -37,29 +39,33 @@ vector_database:
   index_type: Flat
   similarity_threshold: 0.8
   type: faiss
+  use_gpu: true
 video_processing:
   long_video_mode:
     auto_detect_threshold: 60
     checkpoint_interval: 1800
-    chunk_size: 300
+    chunk_size: 500
     enabled: true
-    max_memory_usage: 0.8
+    max_memory_usage: 0.9
     memory_check_interval: 100
   parallel_processing:
     enabled: true
-    max_workers: 2
-    queue_size_multiplier: 2
+    max_workers: 4
+    queue_size_multiplier: 3
     timeout_seconds: 2.0
   performance:
-    batch_processing_size: 10
+    batch_processing_size: 20
     frame_compression_enabled: true
     gc_threshold: 0.8
-    max_frame_size: 1920
+    max_frame_size: 1280
   smart_skip:
     enabled: true
     max_skip_rate: 5
     quality_threshold: 0.7
     strategy: duration_based
+  annotation:
+    frame_interval: 1
+    description: "每隔多少帧进行一次人脸标注（1=每帧都标注，2=每隔一帧标注一次）"
 web:
   debug: true
   host: 0.0.0.0
